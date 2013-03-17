@@ -385,6 +385,8 @@ class PlaybackBox : public ScheduleCommon
     QString             m_newRecGroup;
     QString             m_watchGroupName;
     QString             m_watchGroupLabel;
+    QString             m_partialGroupName;
+    QString             m_partialGroupLabel;
     ViewMask            m_viewMask;
 
     // Popup support //////////////////////////////////////////////////////////
