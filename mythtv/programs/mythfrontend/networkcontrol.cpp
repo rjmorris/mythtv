@@ -78,6 +78,7 @@ NetworkControl::NetworkControl() :
     jumpMap["ripcd"]                 = "Rip CD";
     jumpMap["musicplaylists"]        = "Select music playlists";
     jumpMap["playbackrecordings"]    = "TV Recording Playback";
+    jumpMap["themechooser"]          = "Theme Chooser";
     jumpMap["videobrowser"]          = "Video Browser";
     jumpMap["videogallery"]          = "Video Gallery";
     jumpMap["videolistings"]         = "Video Listings";

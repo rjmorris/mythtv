@@ -575,6 +575,17 @@ static void startManualSchedule(void)
         delete mansched;
 }
 
+static void startThemeChooser(void)
+{
+    MythScreenStack *mainStack = GetMythMainWindow()->GetMainStack();
+    ThemeChooser *tp = new ThemeChooser(mainStack);
+
+    if (tp->Create())
+        mainStack->AddScreen(tp);
+    else
+        delete tp;
+}
+
 static bool isLiveTVAvailable(void)
 {
     if (RemoteGetFreeRecorderCount() > 0)
@@ -862,13 +873,7 @@ static void TVMenuCallback(void *data, QString &selection)
     }
     else if (sel == "settings themechooser")
     {
-        MythScreenStack *mainStack = GetMythMainWindow()->GetMainStack();
-        ThemeChooser *tp = new ThemeChooser(mainStack);
-
-        if (tp->Create())
-            mainStack->AddScreen(tp);
-        else
-            delete tp;
+      startThemeChooser();
     }
     else if (sel == "settings setupwizard")
     {
@@ -1297,6 +1302,8 @@ static void InitJumpPoints(void)
 {
      REG_JUMP(QT_TRANSLATE_NOOP("MythControls", "Reload Theme"),
          "", "", reloadTheme_void);
+     REG_JUMP(QT_TRANSLATE_NOOP("MythControls", "Theme Chooser"),
+         "", "", startThemeChooser);
      REG_JUMP(QT_TRANSLATE_NOOP("MythControls", "Main Menu"),
          "", "", gotoMainMenu);
      REG_JUMPLOC(QT_TRANSLATE_NOOP("MythControls", "Program Guide"),
