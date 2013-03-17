@@ -139,16 +139,18 @@ QString toString(const QDate &date, uint format)
                 stringformat.append(" yyyy");
         }
 
-        if (format & ~kDateShort)
-        {
-            QDate now = current().toLocalTime().date();
-            if ((format & kSimplify) && (now == date))
-                result = QCoreApplication::translate("(Common)", "Today");
-            else if ((format & kSimplify) && (now.addDays(-1) == date))
-                result = QCoreApplication::translate("(Common)", "Yesterday");
-            else if ((format & kSimplify) && (now.addDays(1) == date))
-                result = QCoreApplication::translate("(Common)", "Tomorrow");
-        }
+        // Comment this out to disable "friendly" date names like "Today", etc.
+        //
+        // if (format & ~kDateShort)
+        // {
+        //     QDate now = current().toLocalTime().date();
+        //     if ((format & kSimplify) && (now == date))
+        //         result = QCoreApplication::translate("(Common)", "Today");
+        //     else if ((format & kSimplify) && (now.addDays(-1) == date))
+        //         result = QCoreApplication::translate("(Common)", "Yesterday");
+        //     else if ((format & kSimplify) && (now.addDays(1) == date))
+        //         result = QCoreApplication::translate("(Common)", "Tomorrow");
+        // }
 
         if (result.isEmpty())
             result = gCoreContext->GetQLocale().toString(date, stringformat);
