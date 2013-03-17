@@ -554,7 +554,7 @@ void WelcomeDialog::updateStatusMessage(void)
     if (m_statusList.empty())
     {
         if (m_bWillShutdown && m_secondsToShutdown != -1)
-            m_statusList.append(tr("MythTV is idle and will shutdown in %n "
+            m_statusList.append(tr("MythTV is idle and will shut down in %n "
                                    "second(s).", "", m_secondsToShutdown));
         else
             m_statusList.append(tr("MythTV is idle."));
@@ -610,7 +610,7 @@ void WelcomeDialog::showMenu(void)
         m_menuPopup->AddButton(tr("Lock Shutdown"), SLOT(lockShutdown()));
 
     m_menuPopup->AddButton(tr("Run mythfilldatabase"), SLOT(runEPGGrabber()));
-    m_menuPopup->AddButton(tr("Shutdown Now"), SLOT(shutdownNow()));
+    m_menuPopup->AddButton(tr("Shut down now"), SLOT(shutdownNow()));
     m_menuPopup->AddButton(tr("Exit"), SLOT(closeDialog()));
     m_menuPopup->AddButton(tr("Cancel"));
 }
@@ -657,7 +657,7 @@ void WelcomeDialog::shutdownNow(void)
     // don't shutdown if we are recording
     if (m_isRecording)
     {
-        ShowOkPopup(tr("Cannot shutdown because MythTV is currently recording"));
+        ShowOkPopup(tr("Cannot shut down because MythTV is currently recording"));
         return;
     }
 
@@ -668,7 +668,7 @@ void WelcomeDialog::shutdownNow(void)
         curtime.secsTo(m_nextRecordingStart) - m_preRollSeconds <
         (m_idleWaitForRecordingTime * 60) + m_idleTimeoutSecs)
     {
-        ShowOkPopup(tr("Cannot shutdown because MythTV is about to start recording"));
+        ShowOkPopup(tr("Cannot shut down because MythTV is about to start recording"));
         return;
     }
 
@@ -679,7 +679,7 @@ void WelcomeDialog::shutdownNow(void)
     uint statusCode = myth_system(command);
     if (!(statusCode & 0xFF00) && statusCode & 128)
     {
-        ShowOkPopup(tr("Cannot shutdown because MythTV is about to start "
+        ShowOkPopup(tr("Cannot shut down because MythTV is about to start "
                        "a wakeup/shutdown period."));
         return;
     }

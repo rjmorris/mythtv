@@ -26,10 +26,10 @@ void MythShutdownCommandLineParser::LoadArguments(void)
                 "Set wakeup time to the next scheduled recording", "")
          << add(QStringList( QStringList() << "-q" << "--shutdown" ),
                 "shutdown", false,
-                "Apply wakeup time to nvram and shutdown.", "")
+                "Apply wakeup time to nvram, and shut down.", "")
          << add(QStringList( QStringList() << "-x" << "--safeshutdown" ),
                 "safeshutdown", false,
-                "Check if shutdown is possible, and shutdown", "")
+                "Check if shutdown is possible, and shut down", "")
          << add(QStringList( QStringList() << "-p" << "--startup" ),
                 "startup", false,
                 "Check startup status",

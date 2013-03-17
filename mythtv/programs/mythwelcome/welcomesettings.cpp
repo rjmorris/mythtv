@@ -62,10 +62,10 @@ static HostCheckBox *AutoStartFrontend()
 static HostCheckBox *ShutdownWithBE()
 {
     HostCheckBox *gc = new HostCheckBox("ShutdownWithMasterBE");
-    gc->setLabel(MythWelcomeSettings::tr("Shutdown with Master Backend"));
+    gc->setLabel(MythWelcomeSettings::tr("Shut down with Master Backend"));
     gc->setValue(false);
     gc->setHelpText(MythWelcomeSettings::tr("Mythwelcome will automatically "
-                        "shutdown this computer when the master backend shuts "
+                        "shut this computer down when the master backend shuts "
                         "down. Should only be set on frontend only machines"));
     return gc;
 };
@@ -169,9 +169,9 @@ static HostLineEdit *MythShutdownReboot()
 static HostLineEdit *MythShutdownPowerOff()
 {
     HostLineEdit *gc = new HostLineEdit("MythShutdownPowerOff");
-    gc->setLabel(MythShutdownSettings::tr("Command to shutdown"));
+    gc->setLabel(MythShutdownSettings::tr("Command to shut down"));
     gc->setValue("/sbin/poweroff");
-    gc->setHelpText(MythShutdownSettings::tr("Command to shutdown computer."));
+    gc->setHelpText(MythShutdownSettings::tr("Command to shut computer down."));
     return gc;
 };
 

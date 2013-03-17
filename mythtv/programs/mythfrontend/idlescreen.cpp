@@ -118,7 +118,7 @@ void IdleScreen::UpdateScreen(void)
         QString status;
 
         if (m_secondsToShutdown)
-            status = tr("MythTV is idle and will shutdown in %n "
+            status = tr("MythTV is idle and will shut down in %n "
                         "second(s).", "", m_secondsToShutdown);
 
         if (!status.isEmpty())

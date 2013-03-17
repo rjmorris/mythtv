@@ -464,8 +464,8 @@ static GlobalLineEdit *preSDWUCheckCommand()
     gc->setLabel(QObject::tr("Pre-shutdown-check command"));
     gc->setValue("");
     gc->setHelpText(QObject::tr("A command executed before the backend would "
-                    "shutdown. The return value determines if "
-                    "the backend can shutdown. 0 - yes, "
+                    "shut down. The return value determines if "
+                    "the backend can shut down. 0 - yes, "
                     "1 - restart idling, "
                     "2 - reset the backend to wait for a frontend."));
     return gc;

@@ -382,13 +382,13 @@ static int checkOKShutdown(bool bWantRecStatus)
     if (res > 0)
     {
         LOG(VB_STDIO|VB_FLUSH, LOG_ERR,
-            QObject::tr("Not OK to shutdown", "mythshutdown") + "\n");
+            QObject::tr("Not OK to shut down", "mythshutdown") + "\n");
         res = 1;
     }
     else
     {
         LOG(VB_STDIO|VB_FLUSH, LOG_ERR,
-            QObject::tr("OK to shutdown", "mythshutdown") + "\n");
+            QObject::tr("OK to shut down", "mythshutdown") + "\n");
         res = 0;
     }
 

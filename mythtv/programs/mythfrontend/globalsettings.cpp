@@ -1842,7 +1842,7 @@ static HostComboBox *OverrideExitMenu()
     gc->addSelection(MainGeneralSettings::tr("Default"), "0");
     gc->addSelection(MainGeneralSettings::tr("Show quit"), "1");
     gc->addSelection(MainGeneralSettings::tr("Show quit and shutdown"), "2");
-    gc->addSelection(MainGeneralSettings::tr("Show quit, reboot and shutdown"),
+    gc->addSelection(MainGeneralSettings::tr("Show quit, reboot, and shutdown"),
                      "3");
     gc->addSelection(MainGeneralSettings::tr("Show shutdown"), "4");
     gc->addSelection(MainGeneralSettings::tr("Show reboot"), "5");
