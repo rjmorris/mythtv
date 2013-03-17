@@ -360,12 +360,12 @@ static int checkOKShutdown(bool bWantRecStatus)
 
     if (res > 0)
     {
-        LOG(VB_GENERAL, LOG_NOTICE, "Not OK to shutdown");
+        LOG(VB_GENERAL, LOG_NOTICE, "Not OK to shut down");
         res = 1;
     }
     else
     {
-        LOG(VB_GENERAL, LOG_NOTICE, "OK to shutdown");
+        LOG(VB_GENERAL, LOG_NOTICE, "OK to shut down");
         res = 0;
     }
 

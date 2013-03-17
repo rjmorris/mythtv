@@ -32,7 +32,7 @@ void MythShutdownCommandLineParser::LoadArguments(void)
                 "Apply wakeup time to nvram and shutdown.", "")
          << add(QStringList( QStringList() << "-x" << "--safeshutdown" ),
                 "safeshutdown", false,
-                "Check if shutdown is possible, and shutdown", "")
+                "Check if shutdown is possible, and shut down", "")
          << add(QStringList( QStringList() << "-p" << "--startup" ),
                 "startup", false,
                 "Check startup status",

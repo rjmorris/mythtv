@@ -1580,7 +1580,7 @@ static HostComboBox *OverrideExitMenu()
     gc->addSelection(QObject::tr("Default"), "0");
     gc->addSelection(QObject::tr("Show quit"), "1");
     gc->addSelection(QObject::tr("Show quit and shutdown"), "2");
-    gc->addSelection(QObject::tr("Show quit, reboot and shutdown"), "3");
+    gc->addSelection(QObject::tr("Show quit, reboot, and shutdown"), "3");
     gc->addSelection(QObject::tr("Show shutdown"), "4");
     gc->addSelection(QObject::tr("Show reboot"), "5");
     gc->addSelection(QObject::tr("Show reboot and shutdown"), "6");

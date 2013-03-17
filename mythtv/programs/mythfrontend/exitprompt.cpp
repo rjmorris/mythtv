@@ -204,11 +204,11 @@ void ExitPrompter::handleExit()
 
     dlg->AddButton(tr("No"));
     if (allowExit)
-        dlg->AddButton(QObject::tr("Yes, Exit now"),          SLOT(quit()));
+        dlg->AddButton(QObject::tr("Yes, exit now"),          SLOT(quit()));
     if (allowReboot)
-        dlg->AddButton(QObject::tr("Yes, Exit and Reboot"),   SLOT(reboot()));
+        dlg->AddButton(QObject::tr("Yes, exit and reboot"),   SLOT(reboot()));
     if (allowShutdown)
-        dlg->AddButton(QObject::tr("Yes, Exit and Shutdown"), SLOT(halt()));
+        dlg->AddButton(QObject::tr("Yes, exit and shut down"), SLOT(halt()));
 
     // This is a hack so that the button clicks target the correct slot:
     dlg->SetReturnEvent(this, QString());
