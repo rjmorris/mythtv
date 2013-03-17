@@ -241,8 +241,6 @@ class GuideGrid : public ScheduleCommon, public JumpToChannelListener
     MythUIButtonList *m_timeList;
     MythUIButtonList *m_channelList;
     MythUIGuideGrid  *m_guideGrid;
-    MythUIText       *m_dateText;
-    MythUIText       *m_longdateText;
     MythUIText       *m_jumpToText;
     MythUIText       *m_changroupname;
     MythUIImage      *m_channelImage;

@@ -276,8 +276,6 @@ bool GuideGrid::Create()
     UIUtilE::Assign(this, m_timeList, "timelist", &err);
     UIUtilE::Assign(this, m_channelList, "channellist", &err);
     UIUtilE::Assign(this, m_guideGrid, "guidegrid", &err);
-    UIUtilW::Assign(this, m_dateText, "datetext");
-    UIUtilW::Assign(this, m_longdateText, "longdatetext");
     UIUtilW::Assign(this, m_changroupname, "channelgroup");
     UIUtilW::Assign(this, m_channelImage, "channelicon");
     UIUtilW::Assign(this, m_jumpToText, "jumptotext");
@@ -1498,11 +1496,11 @@ void GuideGrid::customEvent(QEvent *event)
 
 void GuideGrid::updateDateText(void)
 {
-    if (m_dateText)
-        m_dateText->SetText(MythDate::toString(m_currentStartTime, MythDate::kDateShort));
-    if (m_longdateText)
-        m_longdateText->SetText(MythDate::toString(m_currentStartTime,
-                                                 (MythDate::kDateFull | MythDate::kSimplify)));
+    InfoMap infomap;
+    infomap["datetext"] = MythDate::toString(m_currentStartTime, MythDate::kDateShort);
+    infomap["longdatetext"] = MythDate::toString(m_currentStartTime,
+                                               (MythDate::kDateFull | MythDate::kSimplify));
+    SetTextFromMap(infomap);
 }
 
 void GuideGrid::updateChannels(void)
