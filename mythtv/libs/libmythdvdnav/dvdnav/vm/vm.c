@@ -351,6 +351,8 @@ int vm_reset(vm_t *vm, const char *dvdroot) {
 
   (vm->state).vtsN               = -1;
 
+  vm->hop_channel                = 0;
+
   if (vm->dvd && dvdroot) {
     /* a new dvd device has been requested */
     vm_stop(vm);
@@ -1794,7 +1796,8 @@ static int set_PGCN(vm_t *vm, int pgcN) {
   pgcit_t *pgcit;
 
   pgcit = get_PGCIT(vm);
-  assert(pgcit != NULL);  /* ?? Make this return -1 instead */
+  if (pgcit == NULL)
+    return 0;
 
   if(pgcN < 1 || pgcN > pgcit->nr_of_pgci_srp) {
 #ifdef TRACE

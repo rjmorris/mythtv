@@ -794,7 +794,15 @@ void Metadata::toMap(MetadataMap &metadataMap, const QString &prefix)
     metadataMap[prefix + "station"] = m_station;
     metadataMap[prefix + "channel"] = m_channel;
     metadataMap[prefix + "genre"] = m_genre;
-    metadataMap[prefix + "url"] = m_filename;
+    
+    if (ID_TO_REPO(m_id) == RT_Radio)
+    {
+        QUrl url(m_filename);
+        metadataMap[prefix + "url"] = url.toString(QUrl::RemoveUserInfo);
+    }
+    else
+        metadataMap[prefix + "url"] = m_filename;
+    
     metadataMap[prefix + "logourl"] = m_logoUrl;
     metadataMap[prefix + "metadataformat"] = m_metaFormat;
 }
@@ -1451,6 +1459,8 @@ void AllStream::updateStream(Metadata* mdata)
 
 void AllStream::createPlaylist(void)
 {
+    gMusicData->all_playlists->getStreamPlaylist()->disableSaves();
+
     gMusicData->all_playlists->getStreamPlaylist()->removeAllTracks();
 
     for (int x = 0; x < m_streamList.count(); x++)
@@ -1458,6 +1468,8 @@ void AllStream::createPlaylist(void)
         Metadata *mdata = m_streamList.at(x);
         gMusicData->all_playlists->getStreamPlaylist()->addTrack(mdata->ID(), false);
     }
+
+    gMusicData->all_playlists->getStreamPlaylist()->enableSaves();
 }
 
 /**************************************************************************/
@@ -1834,7 +1846,6 @@ void MusicData::reloadMusic(void)
         qApp->processEvents();
         usleep(50000);
     }
-    all_playlists->postLoad();
 
     if (busy)
         busy->Close();

@@ -489,7 +489,7 @@ int64_t AvFormatDecoder::NormalizeVideoTimecode(AVStream *st,
 
 int AvFormatDecoder::GetNumChapters()
 {
-    if (ic->nb_chapters > 1)
+    if (ic && ic->nb_chapters > 1)
         return ic->nb_chapters;
     return 0;
 }
@@ -2136,6 +2136,15 @@ int AvFormatDecoder::ScanStreams(bool novideo)
             codec = find_vdpau_decoder(codec, enc->codec_id);
         }
 
+        if (enc->codec && enc->codec->id != enc->codec_id)
+        {
+            LOG(VB_PLAYBACK, LOG_INFO, LOC +
+                QString("Already opened codec not matching (%1 vs %2). Reopening")
+                .arg(ff_codec_id_string(enc->codec_id))
+                .arg(ff_codec_id_string(enc->codec->id)));
+            avcodec_close(enc);
+        }
+
         if (!enc->codec)
         {
             QMutexLocker locker(avcodeclock);
@@ -3684,7 +3693,7 @@ int AvFormatDecoder::SetTrack(uint type, int trackNo)
 
 QString AvFormatDecoder::GetTrackDesc(uint type, uint trackNo) const
 {
-    if (trackNo >= tracks[type].size())
+    if (!ic || trackNo >= tracks[type].size())
         return "";
 
     bool forced = tracks[type][trackNo].forced;
@@ -4548,7 +4557,7 @@ bool AvFormatDecoder::GetFrame(DecodeType decodetype)
             }
 
             int retval = 0;
-            if (!ic || ((retval = av_read_frame(ic, pkt)) < 0))
+            if (!ic || ((retval = ReadPacket(ic, pkt)) < 0))
             {
                 if (retval == -EAGAIN)
                     continue;
@@ -4718,6 +4727,11 @@ bool AvFormatDecoder::GetFrame(DecodeType decodetype)
         delete pkt;
 
     return true;
+}
+
+int AvFormatDecoder::ReadPacket(AVFormatContext *ctx, AVPacket *pkt)
+{
+    return av_read_frame(ctx, pkt);
 }
 
 bool AvFormatDecoder::HasVideo(const AVFormatContext *ic)
