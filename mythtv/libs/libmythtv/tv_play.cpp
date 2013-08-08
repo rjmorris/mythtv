@@ -12334,13 +12334,13 @@ void TV::ShowOSDStopWatchingRecording(PlayerContext *ctx)
     QStringList options;
 
     if (StateIsLiveTV(GetState(ctx)))
-        videotype = tr("Live TV");
+        videotype = tr("live TV");
     else if (ctx->buffer->IsDVD())
         videotype = tr("this DVD");
 
     ctx->LockPlayingInfo(__FILE__, __LINE__);
     if (videotype.isEmpty() && ctx->playingInfo->IsVideo())
-        videotype = tr("this Video");
+        videotype = tr("this video");
     ctx->UnlockPlayingInfo(__FILE__, __LINE__);
 
     if (videotype.isEmpty())
@@ -12354,9 +12354,9 @@ void TV::ShowOSDStopWatchingRecording(PlayerContext *ctx)
 
         if (IsBookmarkAllowed(ctx))
         {
-            osd->DialogAddButton(tr("Save this position and go to the menu"),
+            osd->DialogAddButton(tr("Bookmark this position"),
                                  "DIALOG_VIDEOEXIT_SAVEPOSITIONANDEXIT_0");
-            osd->DialogAddButton(tr("Do not save, just exit to the menu"),
+            osd->DialogAddButton(tr("Do not bookmark this position"),
                                  ACTION_STOP);
         }
         else
@@ -12364,7 +12364,7 @@ void TV::ShowOSDStopWatchingRecording(PlayerContext *ctx)
                                  ACTION_STOP);
 
         if (IsDeleteAllowed(ctx))
-            osd->DialogAddButton(tr("Delete this recording"),
+            osd->DialogAddButton(tr("Delete %1").arg(videotype),
                                  "DIALOG_VIDEOEXIT_CONFIRMDELETE_0");
 
         osd->DialogAddButton(tr("Keep watching"),
