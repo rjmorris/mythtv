@@ -2515,10 +2515,6 @@ void MythUIButtonList::customEvent(QEvent *event)
         int cur = npe->m_start;
         for (; cur < npe->m_start + npe->m_pageSize && cur < GetCount(); ++cur)
         {
-            const int loginterval = (cur < 1000 ? 100 : 500);
-            if (cur > 200 && cur % loginterval == 0)
-                LOG(VB_GENERAL, LOG_INFO,
-                    QString("Build background buttonlist item %1").arg(cur));
             emit itemLoaded(GetItemAt(cur));
         }
         m_nextItemLoaded = cur;
