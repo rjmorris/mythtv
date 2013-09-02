@@ -231,7 +231,7 @@ void ThemeChooser::Load(void)
 
     if (m_refreshDownloadableThemes)
     {
-        SetBusyPopupMessage(tr("Refreshing Downloadable Themes Information"));
+        SetBusyPopupMessage(tr("Refreshing downloadable theme information."));
 
         QString url = themeSite;
         url.append("/themes.zip");
@@ -243,7 +243,7 @@ void ThemeChooser::Load(void)
         dir.mkpath(destdir);
         bool result = GetMythDownloadManager()->download(url, remoteThemesFile);
 
-        SetBusyPopupMessage(tr("Extracting Downloadable Themes Information"));
+        SetBusyPopupMessage(tr("Extracting downloadable theme information."));
 
         if (!result || !extractZIP(remoteThemesFile, destdir))
         {
@@ -258,7 +258,7 @@ void ThemeChooser::Load(void)
     if ((QFile::exists(remoteThemesFile)) &&
         (remoteThemesDir.exists()))
     {
-        SetBusyPopupMessage(tr("Loading Downloadable Themes"));
+        SetBusyPopupMessage(tr("Loading downloadable themes."));
 
         LOG(VB_GUI, LOG_INFO, LOC +
             QString("%1 and %2 exist, using cached remote themes list")
@@ -637,7 +637,7 @@ void ThemeChooser::saveAndReload(MythUIButtonListItem *item)
                     .arg(origURL).arg(downloadURL));
         }
 
-        OpenBusyPopup(tr("Downloading %1 Theme").arg(info->GetName()));
+        OpenBusyPopup(tr("Downloading theme: %1").arg(info->GetName()));
         m_downloadTheme = info;
 #if 0
         m_downloadFile = RemoteDownloadFile(downloadURL,
@@ -778,7 +778,7 @@ void ThemeChooser::customEvent(QEvent *e)
                         {
                             GetMythDownloadManager()->queueDownload(
                                 m_downloadFile, localFile, this);
-                            OpenBusyPopup(tr("Copying %1 Theme Package")
+                            OpenBusyPopup(tr("Copying theme: %1")
                                           .arg(m_downloadTheme->GetName()));
                             m_downloadFile = localFile;
                             return;
@@ -808,7 +808,7 @@ void ThemeChooser::customEvent(QEvent *e)
                         if (!remoteFileIsLocal)
                             RemoteFile::DeleteFile(args[0]);
 
-                        OpenBusyPopup(tr("Installing %1 Theme")
+                        OpenBusyPopup(tr("Installing theme: %1")
                                       .arg(m_downloadTheme->GetName()));
                     }
                     else
