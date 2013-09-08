@@ -809,13 +809,7 @@ ProgramInfo::ProgramInfo(const QString &_pathname,
     }
     SetPathname(pn);
 
-    if (!_director.isEmpty())
-    {
-        description = QString("%1: %2.  ")
-            .arg(QObject::tr("Directed By")).arg(_director);
-    }
-
-    description += _plot;
+    description = _plot;
 
     if (!_subtitle.isEmpty())
         subtitle = _subtitle;
