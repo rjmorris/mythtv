@@ -642,6 +642,7 @@ class MPUBLIC ProgramInfo
     uint    season;
     uint    episode;
     QString category;
+    QString director;
 
     int32_t recpriority;
 

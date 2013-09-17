@@ -91,6 +91,7 @@ ProgramInfo::ProgramInfo(void) :
     season(0),
     episode(0),
     category(),
+    director(),
 
     recpriority(0),
 
@@ -170,6 +171,7 @@ ProgramInfo::ProgramInfo(const ProgramInfo &other) :
     season(other.season),
     episode(other.episode),
     category(other.category),
+    director(other.director),
 
     recpriority(other.recpriority),
 
@@ -304,6 +306,7 @@ ProgramInfo::ProgramInfo(
     season(_season),
     episode(_episode),
     category(_category),
+    director(),
 
     recpriority(_recpriority),
 
@@ -415,6 +418,7 @@ ProgramInfo::ProgramInfo(
     season(_season),
     episode(_episode),
     category(_category),
+    director(),
 
     recpriority(0),
 
@@ -526,6 +530,7 @@ ProgramInfo::ProgramInfo(
     season(0),
     episode(0),
     category(_category),
+    director(),
 
     recpriority(0),
 
@@ -673,6 +678,7 @@ ProgramInfo::ProgramInfo(
     season(_season),
     episode(_episode),
     category(_category),
+    director(),
 
     recpriority(0),
 
@@ -789,6 +795,15 @@ ProgramInfo::ProgramInfo(const QString &_pathname,
 {
     clear();
 
+    title = _title;
+    subtitle = _subtitle;
+    description = _plot;
+    season = _season;
+    episode = _episode;
+    director = _director;
+    programid = _programid;
+    inetref = _inetref;
+
     QDateTime cur = MythDate::current();
     recstartts = cur.addSecs(((int)_length_in_minutes + 1) * -60);
     recendts   = recstartts.addSecs(_length_in_minutes * 60);
@@ -808,23 +823,6 @@ ProgramInfo::ProgramInfo(const QString &_pathname,
         pn = QString("bd:%1").arg(_pathname);
     }
     SetPathname(pn);
-
-    if (!_director.isEmpty())
-    {
-        description = QString("%1: %2.  ")
-            .arg(QObject::tr("Directed By")).arg(_director);
-    }
-
-    description += _plot;
-
-    if (!_subtitle.isEmpty())
-        subtitle = _subtitle;
-
-    season = _season;
-    episode = _episode;
-    inetref = _inetref;
-    title = _title;
-    programid = _programid;
 }
 
 ProgramInfo::ProgramInfo(const QString &_title, uint _chanid,
@@ -905,6 +903,7 @@ void ProgramInfo::clone(const ProgramInfo &other,
     season = other.season;
     episode = other.episode;
     category = other.category;
+    director = other.director;
 
     chanid = other.chanid;
     chanstr = other.chanstr;
@@ -1009,6 +1008,7 @@ void ProgramInfo::clear(void)
     season = 0;
     episode = 0;
     category.clear();
+    director.clear();
 
     chanid = 0;
     chanstr.clear();
@@ -1383,6 +1383,8 @@ void ProgramInfo::ToMap(InfoMap &progMap,
     }
 
     progMap["category"] = category;
+    progMap["director"] = director;
+
     progMap["callsign"] = chansign;
     progMap["commfree"] = (programflags & FL_CHANCOMMFREE) ? 1 : 0;
     progMap["outputfilters"] = chanplaybackfilters;
