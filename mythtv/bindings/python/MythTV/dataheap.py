@@ -1136,7 +1136,7 @@ class VideoGrabber( Grabber ):
     def __init__(self, mode, lang='en', db=None):
         dbvalue = {'tv':'TelevisionGrabber', 'movie':'MovieGrabber'}
         path = {'tv':'metadata/Television/ttvdb.py',
-                'movie':'metadata/Movie/tmdb.py'}
+                'movie':'metadata/Movie/tmdb3.py'}
         self.mode = mode.lower()
         try:
             Grabber.__init__(self, setting=dbvalue[self.mode], db=db,
@@ -1144,6 +1144,10 @@ class VideoGrabber( Grabber ):
                         prefix=os.path.join(INSTALL_PREFIX, 'share/mythtv'))
         except KeyError:
             raise MythError('Invalid MythVideo grabber')
+
+        if self.path[-7:] == 'tmdb.py':
+            self.path = self.path[:-7] + 'tmdb3.py'
+
         self.append('-l',lang)
 
 #### MYTHNETVISION ####

@@ -653,7 +653,7 @@ bool LoggerThread::flush(int timeoutMS)
 {
     QTime t;
     t.start();
-    while (!m_aborted && logQueue.isEmpty() && t.elapsed() < timeoutMS)
+    while (!m_aborted && !logQueue.isEmpty() && t.elapsed() < timeoutMS)
     {
         m_waitNotEmpty->wakeAll();
         int left = timeoutMS - t.elapsed();
@@ -791,7 +791,7 @@ void logPropagateCalc(void)
         logPropagateArgs += " --quiet";
 
     if (!logPropagateOpts.dblog)
-        logPropagateArgs += " --nodblog";
+        logPropagateArgs += " --enable-dblog";
 
 #ifndef _WIN32
     if (logPropagateOpts.facility >= 0)
