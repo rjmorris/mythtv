@@ -2397,7 +2397,7 @@ void VideoDialog::UpdateText(MythUIButtonListItem *item)
         {
             CheckedSet(m_crumbText, m_d->m_currentNode->getParent()->getRouteByString().join(" > "));
         }
-        CheckedSet(this, "foldername", m_d->m_currentNode->getText());
+        CheckedSet(this, "foldername", m_d->m_currentNode->GetText());
     }
 
     if (node && node->getInt() == kSubFolder)
