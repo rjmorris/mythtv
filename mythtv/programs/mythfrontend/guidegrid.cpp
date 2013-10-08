@@ -248,8 +248,6 @@ GuideGrid::GuideGrid(MythScreenStack *parent,
            m_timeList(NULL),
            m_channelList(NULL),
            m_guideGrid(NULL),
-           m_dateText(NULL),
-           m_longdateText(NULL),
            m_jumpToText(NULL),
            m_changroupname(NULL),
            m_channelImage(NULL)
