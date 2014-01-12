@@ -982,6 +982,7 @@ TV::TV(void)
       db_auto_set_watched(false),   db_end_of_rec_exit_prompt(false),
       db_jump_prefer_osd(true),     db_use_gui_size_for_tv(false),
       db_start_in_guide(false),     db_toggle_bookmark(false),
+      db_clear_saved_position(false),
       db_run_jobs_on_remote(false), db_continue_embedded(false),
       db_use_fixed_size(true),      db_browse_always(false),
       db_browse_all_tuners(false),
@@ -1087,6 +1088,7 @@ void TV::InitFromDB(void)
     kv["JumpToProgramOSD"]         = "1";
     kv["GuiSizeForTV"]             = "0";
     kv["WatchTVGuide"]             = "0";
+    kv["ClearSavedPosition"]       = "1";
     kv["AltClearSavedPosition"]    = "1";
     kv["JobsRunOnRecordHost"]      = "0";
     kv["ContinueEmbeddedTVPlay"]   = "0";
@@ -1131,6 +1133,7 @@ void TV::InitFromDB(void)
     db_jump_prefer_osd     = kv["JumpToProgramOSD"].toInt();
     db_use_gui_size_for_tv = kv["GuiSizeForTV"].toInt();
     db_start_in_guide      = kv["WatchTVGuide"].toInt();
+    db_clear_saved_position= kv["ClearSavedPosition"].toInt();
     db_toggle_bookmark     = kv["AltClearSavedPosition"].toInt();
     db_run_jobs_on_remote  = kv["JobsRunOnRecordHost"].toInt();
     db_continue_embedded   = kv["ContinueEmbeddedTVPlay"].toInt();
@@ -3260,17 +3263,39 @@ void TV::PrepToSwitchToRecordedProgram(PlayerContext *ctx,
 
 void TV::PrepareToExitPlayer(PlayerContext *ctx, int line, BookmarkAction bookmark)
 {
-    bool bm_basic =
-        (bookmark == kBookmarkAlways ||
-         (bookmark == kBookmarkAuto && db_playback_exit_prompt == 2));
-    bool bookmark_it = bm_basic && IsBookmarkAllowed(ctx);
+    bool bm_allowed = IsBookmarkAllowed(ctx);
     ctx->LockDeletePlayer(__FILE__, line);
     if (ctx->player)
     {
-        if (bookmark_it)
-            SetBookmark(ctx,
-                        (ctx->player->IsNearEnd() || getEndOfRecording())
-                        && !StateIsRecording(GetState(ctx)));
+        if (bm_allowed)
+        {
+            // If we're exiting in the middle of the recording, we
+            // automatically save a bookmark when "Action on playback
+            // exit" is set to "Save position and exit".
+            bool allow_set_before_end =
+                (bookmark == kBookmarkAlways ||
+                 (bookmark == kBookmarkAuto &&
+                  db_playback_exit_prompt == 2));
+            // If we're exiting at the end of the recording, we
+            // automatically clear the bookmark when "Action on
+            // playback exit" is set to "Save position and exit" and
+            // "Clear bookmark on playback" is set to true.
+            bool allow_clear_at_end =
+                (bookmark == kBookmarkAlways ||
+                 (bookmark == kBookmarkAuto &&
+                  db_playback_exit_prompt == 2 &&
+                  db_clear_saved_position));
+            // Whether to set/clear a bookmark depends on whether we're
+            // exiting at the end of a recording.
+            bool at_end = (ctx->player->IsNearEnd() || getEndOfRecording());
+            // Don't consider ourselves at the end if the recording is
+            // in-progress.
+            at_end &= !StateIsRecording(GetState(ctx));
+            if (at_end && allow_clear_at_end)
+                SetBookmark(ctx, true);
+            if (!at_end && allow_set_before_end)
+                SetBookmark(ctx, false);
+        }
         if (db_auto_set_watched)
             ctx->player->SetWatched();
     }
@@ -3709,6 +3734,34 @@ static bool has_action(QString action, const QStringList &actions)
     return false;
 }
 
+// Make a special check for global system-related events.
+//
+// This check needs to be done early in the keypress event processing,
+// because FF/REW processing causes unknown events to stop FF/REW, and
+// manual zoom mode processing consumes all but a few event types.
+// Ideally, we would just call MythScreenType::keyPressEvent()
+// unconditionally, but we only want certain keypresses handled by
+// that method.
+//
+// As a result, some of the MythScreenType::keyPressEvent() string
+// compare logic is copied here.
+static bool SysEventHandleAction(QKeyEvent *e, const QStringList &actions)
+{
+    QStringList::const_iterator it;
+    for (it = actions.begin(); it != actions.end(); ++it)
+    {
+        if ((*it).startsWith("SYSEVENT") ||
+            *it == ACTION_SCREENSHOT ||
+            *it == ACTION_TVPOWERON ||
+            *it == ACTION_TVPOWEROFF)
+        {
+            return GetMythMainWindow()->GetMainStack()->GetTopScreen()->
+                keyPressEvent(e);
+        }
+    }
+    return false;
+}
+
 bool TV::ProcessKeypress(PlayerContext *actx, QKeyEvent *e)
 {
     bool ignoreKeys = actx->IsPlayerChangingBuffers();
@@ -3871,6 +3924,7 @@ bool TV::ProcessKeypress(PlayerContext *actx, QKeyEvent *e)
     bool isDVD = actx->buffer && actx->buffer->IsDVD();
     bool isMenuOrStill = actx->buffer && actx->buffer->IsInDiscMenuOrStillFrame();
 
+    handled = handled || SysEventHandleAction(e, actions);
     handled = handled || BrowseHandleAction(actx, actions);
     handled = handled || ManualZoomHandleAction(actx, actions);
     handled = handled || PictureAttributeHandleAction(actx, actions);
@@ -8062,7 +8116,7 @@ void TV::UpdateOSDSignal(const PlayerContext *ctx, const QStringList &strlist)
             ber = it->GetValue();
         else if ("pos" == it->GetShortName())
             pos = it->GetValue();
-        else if ("tuned" == it->GetShortName())
+        else if ("script" == it->GetShortName())
             tuned = it->GetValue();
         else if ("seen_pat" == it->GetShortName())
             pat = it->IsGood() ? "a" : "_";
@@ -8574,7 +8628,7 @@ void TV::DoEditSchedule(int editType)
     const ProgramInfo pginfo(*actx->playingInfo);
     uint    chanid  = pginfo.GetChanID();
     QString channum = pginfo.GetChanNum();
-    QDateTime starttime = pginfo.GetScheduledStartTime();
+    QDateTime starttime = MythDate::current();
     actx->UnlockPlayingInfo(__FILE__, __LINE__);
 
     ClearOSD(actx);
@@ -11623,7 +11677,7 @@ bool TV::MenuItemDisplayPlayback(const MenuItemContext &c)
     {
         if (ctx->recorder)
         {
-            vector<uint> cardids = CardUtil::GetCardList();
+            vector<uint> cardids = CardUtil::GetLiveTVCardList();
             uint cardid  = ctx->GetCardID();
             vector<uint> excluded_cardids;
             stable_sort(cardids.begin(), cardids.end());
@@ -11673,7 +11727,7 @@ bool TV::MenuItemDisplayPlayback(const MenuItemContext &c)
             uint cardid = 0;
             vector<uint> excluded_cardids;
             uint sourceid = 0;
-            cardids = CardUtil::GetCardList();
+            cardids = CardUtil::GetLiveTVCardList();
             cardid  = ctx->GetCardID();
             excluded_cardids.push_back(cardid);
             InfoMap info;

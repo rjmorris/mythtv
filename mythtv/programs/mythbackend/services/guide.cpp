@@ -90,13 +90,16 @@ DTC::ProgramGuide *Guide::GetProgramGuide( const QDateTime &rawStartTime ,
     ProgramList  schedList;
     MSqlBindings bindings;
 
+    // lpad is to allow natural sorting of numbers
     QString      sSQL = "WHERE program.chanid >= :StartChanId "
                          "AND program.chanid <= :EndChanId "
                          "AND program.endtime >= :StartDate "
                          "AND program.starttime <= :EndDate "
-                        "GROUP BY program.starttime, channel.channum, "
-                         "channel.callsign, program.title "
-                        "ORDER BY program.chanid ";
+                         "GROUP BY program.starttime, channel.chanid "
+                         "ORDER BY lpad(channel.channum, 10, 0), "
+                         "         callsign,                     "
+                         "         lpad(program.chanid, 10, 0),  "
+                         "         program.starttime ";
 
     bindings[":StartChanId"] = nStartChanId;
     bindings[":EndChanId"  ] = nEndChanId;
@@ -123,10 +126,15 @@ DTC::ProgramGuide *Guide::GetProgramGuide( const QDateTime &rawStartTime ,
     int               nChanCount = 0;
     uint              nCurChanId = 0;
     DTC::ChannelInfo *pChannel   = NULL;
+    QString           sCurCallsign;
+    uint              nSkipChanId = 0;
 
     for( uint n = 0; n < progList.size(); n++)
     {
         ProgramInfo *pInfo = progList[ n ];
+
+        if ( nSkipChanId == pInfo->GetChanID())
+            continue;
 
         if ( nCurChanId != pInfo->GetChanID() )
         {
@@ -134,11 +142,20 @@ DTC::ProgramGuide *Guide::GetProgramGuide( const QDateTime &rawStartTime ,
 
             nCurChanId = pInfo->GetChanID();
 
+            // Filter out channels with the same callsign, keeping just the
+            // first seen
+            if (sCurCallsign == pInfo->GetChannelSchedulingID())
+            {
+                nSkipChanId = pInfo->GetChanID();
+                continue;
+            }
+
             pChannel = pGuide->AddNewChannel();
 
             FillChannelInfo( pChannel, pInfo, bDetails );
-        }
 
+            sCurCallsign = pChannel->CallSign();
+        }
         
         DTC::Program *pProgram = pChannel->AddNewProgram();
 
@@ -229,15 +246,41 @@ QFileInfo Guide::GetChannelIcon( int nChanId,
     if (sFileName.isEmpty())
         return QFileInfo();
 
-    if ((nWidth <= 0) && (nHeight <= 0))
+    // ------------------------------------------------------------------
+    // Search for the filename
+    // ------------------------------------------------------------------
+
+    StorageGroup storage( "ChannelIcons" );
+    QString sFullFileName = storage.FindFile( sFileName );
+
+    if (sFullFileName.isEmpty())
     {
-        // Use default pixmap
-        return QFileInfo( sFileName );  
+        LOG(VB_UPNP, LOG_ERR,
+            QString("GetImageFile - Unable to find %1.").arg(sFileName));
+
+        return QFileInfo();
     }
 
+    // ----------------------------------------------------------------------
+    // check to see if the file (still) exists
+    // ----------------------------------------------------------------------
+
+    if ((nWidth == 0) && (nHeight == 0))
+    {
+        if (QFile::exists( sFullFileName ))
+        {
+            return QFileInfo( sFullFileName );
+        }
+
+        LOG(VB_UPNP, LOG_ERR,
+            QString("GetImageFile - File Does not exist %1.").arg(sFullFileName));
+
+        return QFileInfo();
+    }
+    // -------------------------------------------------------------------
 
     QString sNewFileName = QString( "%1.%2x%3.png" )
-                              .arg( sFileName )
+                              .arg( sFullFileName )
                               .arg( nWidth    )
                               .arg( nHeight   );
 
@@ -254,7 +297,7 @@ QFileInfo Guide::GetChannelIcon( int nChanId,
 
     float fAspect = 0.0;
 
-    QImage *pImage = new QImage( sFileName );
+    QImage *pImage = new QImage( sFullFileName );
 
     if (!pImage)
         return QFileInfo();

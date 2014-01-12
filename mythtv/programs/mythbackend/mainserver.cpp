@@ -425,16 +425,6 @@ void MainServer::NewConnection(int socketDescriptor)
 
 void MainServer::readyRead(MythSocket *sock)
 {
-    sockListLock.lockForRead();
-    PlaybackSock *testsock = GetPlaybackBySock(sock);
-    bool expecting_reply = testsock && testsock->isExpectingReply();
-    sockListLock.unlock();
-    if (expecting_reply)
-    {
-        LOG(VB_GENERAL, LOG_INFO, "readyRead ignoring, expecting reply");
-        return;
-    }
-
     threadPool.startReserved(
         new ProcessRequestRunnable(*this, sock),
         "ProcessRequest", PRT_TIMEOUT);
@@ -2428,10 +2418,27 @@ void MainServer::HandleCheckRecordingActive(QStringList &slist,
 
 void MainServer::HandleStopRecording(QStringList &slist, PlaybackSock *pbs)
 {
+    ProgramList schedList;
+    bool hasConflicts = false;
+    LoadFromScheduler(schedList, hasConflicts);
+
     QStringList::const_iterator it = slist.begin() + 1;
     RecordingInfo recinfo(it, slist.end());
     if (recinfo.GetChanID())
+    {
+        // Stop recording may have been called for the same program on
+        // different channel in the guide, we need to find the actual channel
+        // that the recording is occurring on
+        for( uint n = 0; n < schedList.size(); n++)
+        {
+            ProgramInfo *pInfo = schedList[n];
+            if ((pInfo->GetRecordingStatus() == rsTuning ||
+                 pInfo->GetRecordingStatus() == rsRecording)
+                && recinfo.IsSameProgram(*pInfo))
+                recinfo.SetChanID(pInfo->GetChanID());
+        }
         DoHandleStopRecording(recinfo, pbs);
+    }
 }
 
 void MainServer::DoHandleStopRecording(
@@ -6247,6 +6254,9 @@ void MainServer::reconnectTimeout(void)
         }
     }
 
+    // Calling SendReceiveStringList() with callbacks enabled is asking for
+    // trouble, our reply might be swallowed by readyRead
+    masterServerSock->SetReadyReadCallbackEnabled(false);
     if (!masterServerSock->SendReceiveStringList(strlist, 1) ||
         (strlist[0] == "ERROR"))
     {
@@ -6268,6 +6278,7 @@ void MainServer::reconnectTimeout(void)
         masterServerReconnect->start(kMasterServerReconnectTimeout);
         return;
     }
+    masterServerSock->SetReadyReadCallbackEnabled(true);
 
     masterServer = new PlaybackSock(this, masterServerSock, server,
                                     kPBSEvents_Normal);
