@@ -1014,6 +1014,10 @@ bool MythContextPrivate::event(QEvent *e)
 
 void MythContextPrivate::ShowConnectionFailurePopup(bool persistent)
 {
+    // Prevent this message from being displayed. Otherwise it's displayed
+    // every time a frontend wakes from suspend.
+    return;
+
     QDateTime now = MythDate::current();
 
     if (!GetNotificationCenter() || !m_ui || !m_ui->IsScreenSetup())
@@ -1043,6 +1047,10 @@ void MythContextPrivate::ShowConnectionFailurePopup(bool persistent)
 
 void MythContextPrivate::HideConnectionFailurePopup(void)
 {
+    // Prevent this message from being displayed. Otherwise it's displayed
+    // every time a frontend wakes from suspend.
+    return;
+
     if (!GetNotificationCenter())
         return;
 
