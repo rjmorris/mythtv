@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <cerrno>
+#include <stdlib.h>
 
 #include <iostream>
 using namespace std;
@@ -16,6 +17,9 @@ using namespace std;
 #include <QWidget>
 #include <QApplication>
 #include <QTimer>
+#ifdef Q_OS_MAC
+#include <QProcessEnvironment>
+#endif
 
 #include "previewgeneratorqueue.h"
 #include "referencecounter.h"
@@ -360,7 +364,6 @@ static void startGuide(void)
 {
     uint chanid = 0;
     QString channum = gCoreContext->GetSetting("DefaultTVChannel");
-    channum = (channum.isEmpty()) ? "3" : channum;
     QDateTime startTime;
     GuideGrid::RunProgramGuide(chanid, channum, startTime, NULL, false, true, -2);
 }
@@ -806,7 +809,7 @@ static void TVMenuCallback(void *data, QString &selection)
     (void)data;
     QString sel = selection.toLower();
 
-    if (sel.startsWith("settings "))
+    if (sel.startsWith("settings ") || sel == "video_settings_general")
     {
         GetMythUI()->AddCurrentLocation("Setup");
         gCoreContext->ActivateSettingsCache(false);
@@ -1492,6 +1495,15 @@ int main(int argc, char **argv)
     new QApplication(argc, argv);
     QCoreApplication::setApplicationName(MYTH_APPNAME_MYTHFRONTEND);
 
+#ifdef Q_OS_MAC
+    QString path = QCoreApplication::applicationDirPath();
+    setenv("PYTHONPATH",
+           QString("%1/../Resources/lib/python2.6/site-packages:%2")
+           .arg(path)
+           .arg(QProcessEnvironment::systemEnvironment().value("PYTHONPATH"))
+           .toUtf8().constData(), 1);
+#endif
+
 #ifndef _WIN32
     QList<int> signallist;
     signallist << SIGINT << SIGTERM << SIGSEGV << SIGABRT << SIGBUS << SIGFPE
@@ -1643,11 +1655,11 @@ int main(int argc, char **argv)
 #ifdef USING_AIRPLAY
     if (gCoreContext->GetNumSetting("AirPlayEnabled", true))
     {
+        MythRAOPDevice::Create();
         if (!gCoreContext->GetNumSetting("AirPlayAudioOnly", false))
         {
             MythAirplayServer::Create();
         }
-        MythRAOPDevice::Create();
     }
 #endif
 

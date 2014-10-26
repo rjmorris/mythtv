@@ -95,12 +95,11 @@ void HLSStreamHandler::Return(HLSStreamHandler* & ref)
 }
 
 HLSStreamHandler::HLSStreamHandler(const IPTVTuningData& tuning) :
-    IPTVStreamHandler(tuning),
-    m_tuning(tuning)
+    IPTVStreamHandler(tuning)
 {
-    m_hls       = new HLSReader();
-    m_buffer    = new uint8_t[BUFFER_SIZE];
-    m_throttle  = true;
+    m_hls        = new HLSReader();
+    m_readbuffer = new uint8_t[BUFFER_SIZE];
+    m_throttle   = true;
 }
 
 HLSStreamHandler::~HLSStreamHandler(void)
@@ -108,7 +107,7 @@ HLSStreamHandler::~HLSStreamHandler(void)
     LOG(VB_CHANNEL, LOG_INFO, LOC + "dtor");
     Stop();
     delete m_hls;
-    delete[] m_buffer;
+    delete[] m_readbuffer;
 }
 
 void HLSStreamHandler::run(void)
@@ -116,7 +115,9 @@ void HLSStreamHandler::run(void)
     RunProlog();
 
     QString url = m_tuning.GetURL(0).toString();
-    int cnt = 0;
+    int err_cnt = 0;
+    int nil_cnt = 0;
+    int open_sleep = 500000;
 
     LOG(VB_GENERAL, LOG_INFO, LOC + "run() -- begin");
 
@@ -132,21 +133,22 @@ void HLSStreamHandler::run(void)
         {
             if (!m_hls->Open(url))
             {
-                LOG(VB_CHANNEL, LOG_INFO, LOC +
-                    "run: HLS OpenFile() failed");
-                usleep(500000);
+                usleep(open_sleep);
+                if (open_sleep < 20000000)
+                    open_sleep += 500000;
                 continue;
             }
+            open_sleep = 500000;
             m_hls->Throttle(m_throttle);
             m_throttle = false;
         }
 
-        int size = m_hls->Read(m_buffer, BUFFER_SIZE);
+        int size = m_hls->Read(m_readbuffer, BUFFER_SIZE);
 
         if (size < 0)
         {
             // error
-            if (++cnt > 10)
+            if (++err_cnt > 10)
             {
                 LOG(VB_RECORD, LOG_ERR, LOC + "HLSReader failed");
                 Stop();
@@ -154,20 +156,22 @@ void HLSStreamHandler::run(void)
             }
             continue;
         }
-        else
-            cnt = 0;
+        err_cnt = 0;
 
         if (size == 0)
         {
-            usleep(250000);  // .25 second
+            if (nil_cnt < 4)
+                ++nil_cnt;
+            usleep(250000 * nil_cnt - 1);  // range .25 to 1 second, minus 1
             continue;
         }
+        nil_cnt = 0;
 
-        if (m_buffer[0] != 0x47)
+        if (m_readbuffer[0] != 0x47)
         {
             LOG(VB_RECORD, LOG_INFO, LOC +
                 QString("Packet not starting with SYNC Byte (got 0x%1)")
-                .arg((char)m_buffer[0], 2, QLatin1Char('0')));
+                .arg((char)m_readbuffer[0], 2, QLatin1Char('0')));
             continue;
         }
 
@@ -178,7 +182,7 @@ void HLSStreamHandler::run(void)
             sit = _stream_data_list.begin();
             for (; sit != _stream_data_list.end(); ++sit)
             {
-                remainder = sit.key()->ProcessData(m_buffer, size);
+                remainder = sit.key()->ProcessData(m_readbuffer, size);
             }
         }
 

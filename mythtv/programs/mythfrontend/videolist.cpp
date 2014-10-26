@@ -9,6 +9,7 @@ using namespace std;
 
 #include "mythcontext.h"
 #include "mythdate.h"
+#include "mythmiscutil.h"
 
 #include "mythgenerictree.h"
 #include "videometadatalistmanager.h"
@@ -201,7 +202,7 @@ struct metadata_path_sort
             lhs_comp = lhs_comp.toLower();
             rhs_comp = rhs_comp.toLower();
         }
-        return QString::localeAwareCompare(lhs_comp, rhs_comp) < 0;
+        return naturalCompare(lhs_comp, rhs_comp) < 0;
     }
 
     bool m_ignore_case;
@@ -412,7 +413,12 @@ class VideoListImp
         if (mp)
         {
             ret = mp->DeleteFile();
-            if (ret) ret = m_metadata.purgeByID(video_id);
+            if (ret)
+            {
+                ret = m_metadata.purgeByID(video_id);
+                // Force refresh
+                m_metadata_list_type = VideoListImp::ltNone;
+            }
         }
 
         return ret;

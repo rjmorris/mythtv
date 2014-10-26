@@ -50,7 +50,6 @@ INCLUDEPATH += $$DEPENDPATH
 INCLUDEPATH += $$POSTINC
 
 QMAKE_CXXFLAGS += $${FREETYPE_CFLAGS}
-QMAKE_LFLAGS_SHLIB += $${FREETYPE_LIBS}
 
 macx {
     # Mac OS X Frameworks
@@ -640,6 +639,7 @@ using_backend {
     HEADERS += recorders/rtp/rtppacketbuffer.h
     HEADERS += recorders/rtp/rtpdatapacket.h
     HEADERS += recorders/rtp/rtpfecpacket.h
+    HEADERS += recorders/rtp/rtcpdatapacket.h
 
     SOURCES += recorders/cetonrtsp.cpp
     SOURCES += recorders/iptvchannel.cpp

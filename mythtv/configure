@@ -3465,7 +3465,7 @@ else
 fi
 
 add_cflags $extra_cflags
-#add_cxxflags $extra_cxxflags
+add_cxxflags $extra_cxxflags
 add_asflags $extra_cflags
 
 if test -n "$sysroot"; then
@@ -4467,15 +4467,17 @@ is_qmake4(){
     $1 --version 2>&1 | egrep -q -e "Qt version 4\.[8-9]\.[0-9]"
 }
 
-if ! is_qmake5 $qmake ; then
-  if ! is_qmake4 $qmake; then
-      is_qmake4 qmake-qt4 && qmake=qmake-qt4 || die "qmake for Qt4.8 or newer not found.\nPlease specify the correct qmake with --qmake="
-  fi
-  if ! expr $($qmake -query QT_VERSION) : "4\.[8-9]\.[0-9]" >/dev/null; then
-      die "Qt4.8 or newer is required to build MythTV."
-  fi
-else
+if is_qmake5 $qmake || is_qmake5 qmake-qt5; then
+    if is_qmake5 qmake-qt5; then
+        qmake=qmake-qt5
+    fi
     check_cxxflags -DQT_DISABLE_DEPRECATED_BEFORE
+elif is_qmake4 $qmake || is_qmake4 qmake-qt4; then
+    if is_qmake4 qmake-qt4; then
+        qmake=qmake-qt4
+    fi
+else
+    die "qmake for Qt4.8 or newer not found.\nPlease specify the correct qmake with --qmake="
 fi
 
 if test x"$qmakespecs" != x; then
@@ -4782,6 +4784,7 @@ check_exec -lm << EOF && enable cpu_clips_negative
     }
 EOF
 
+enabled x86 && enabled sse2
 # test for distcc
 enabled distcc && check_cmd distcc --version || disable distcc
 if enabled distcc; then
@@ -6473,6 +6476,21 @@ BLOCKQUOTE
 if enabled mythlogserver; then
     # configure zeromq
     echo "Configuring zeromq..."
+    if [ ! `which libtool` ]
+    then
+        echo libtool not found. please install it.
+        exit 1
+    fi
+    if [ ! `which autoreconf` ]
+    then
+        echo autoreconf not found. please install it.
+        exit 1
+    fi
+    (cd external/zeromq ; ./autogen.sh 2> /dev/null > /dev/null)
+    if [ $? -ne 0 ]; then
+	echo external/zeromq/autogen.sh failed.
+	exit 1
+    fi
     (cd external/zeromq ; \
              ./configure --quiet --without-documentation --prefix=${prefix} \
                          --includedir=${prefix}/include/mythtv/zeromq)

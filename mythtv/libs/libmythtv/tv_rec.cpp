@@ -694,7 +694,7 @@ void TVRec::SetRecordingStatus(
         pendingRecLock.unlock();
     }
 
-    LOG(VB_RECORD, LOG_DEBUG, LOC +
+    LOG(VB_RECORD, LOG_INFO, LOC +
         QString("SetRecordingStatus(%1->%2) on line %3")
         .arg(toString(old_status, kSingleRecord))
         .arg(toString(new_status, kSingleRecord))
@@ -802,7 +802,7 @@ void TVRec::StartedRecording(RecordingInfo *curRec)
     if (curRec->IsCommercialFree())
         curRec->SaveCommFlagged(COMM_FLAG_COMMFREE);
 
-    AutoRunInitType t = (curRec->QueryRecordingGroup() == "LiveTV") ?
+    AutoRunInitType t = (curRec->GetRecordingGroup() == "LiveTV") ?
         kAutoRunNone : kAutoRunProfile;
     InitAutoRunJobs(curRec, t, NULL, __LINE__);
 
@@ -2615,8 +2615,8 @@ void TVRec::SpawnLiveTV(LiveTVChain *newchain, bool pip, QString startchan)
     tvchain->ReloadAll();
 
     QString hostprefix = gCoreContext->GenMythURL(
-                    gCoreContext->GetBackendServerIP(),
-                    gCoreContext->GetSetting("BackendServerPort").toInt());
+                    gCoreContext->GetHostName(),
+                    gCoreContext->GetBackendServerPort());
 
     tvchain->SetHostPrefix(hostprefix);
     tvchain->SetCardType(genOpt.cardtype);
@@ -2928,7 +2928,8 @@ void TVRec::ToggleChannelFavorite(QString changroupname)
     {
         LOG(VB_GENERAL, LOG_ERR, LOC +
             QString("Channel: \'%1\' was not found in the database.\n"
-                    "\t\tMost likely, your DefaultTVChannel setting is wrong.\n"
+                    "\t\tMost likely, the 'starting channel' for this "
+                    "Input Connection is invalid.\n"
                     "\t\tCould not toggle favorite.").arg(channum));
         return;
     }
@@ -3742,6 +3743,8 @@ void TVRec::TuningFrequency(const TuningRequest &request)
         }
         else if (request.progNum >= 0)
         {
+            channel->SetChannelByString(request.channel);
+
             if (mpeg)
                 mpeg->SetDesiredProgram(request.progNum);
         }
@@ -3869,7 +3872,10 @@ void TVRec::TuningFrequency(const TuningRequest &request)
             {
                 SetFlags(kFlagWaitingForSignal);
                 if (curRecording)
-                    signalMonitorDeadline = curRecording->GetScheduledEndTime();
+                {
+                    signalMonitorDeadline =
+                        curRecording->GetRecordingEndTime();
+                }
                 else
                 {
                     QDateTime expire = MythDate::current();
@@ -4455,8 +4461,8 @@ bool TVRec::GetProgramRingBufferForLiveTV(RecordingInfo **pginfo,
         {
             LOG(VB_GENERAL, LOG_ERR, LOC +
                 QString("Channel: \'%1\' was not found in the database.\n"
-                        "\t\tMost likely, your DefaultTVChannel setting is "
-                        "wrong.\n"
+                        "\t\tMost likely, the 'starting channel' for this "
+                        "Input Connection is invalid.\n"
                         "\t\tCould not start livetv.").arg(channum));
             return false;
         }
@@ -4505,7 +4511,7 @@ bool TVRec::GetProgramRingBufferForLiveTV(RecordingInfo **pginfo,
     }
 
     if (!pseudoLiveTVRecording)
-        prog->ApplyRecordRecGroupChange("LiveTV");
+        prog->SetRecordingGroup("LiveTV");
 
     StartedRecording(prog);
 
@@ -4640,6 +4646,10 @@ bool TVRec::SwitchLiveTVRingBuffer(const QString & channum,
         }
         curRecording = pginfo;
         SetRingBuffer(rb);
+    }
+    else
+    {
+        delete rb;
     }
 
     return true;

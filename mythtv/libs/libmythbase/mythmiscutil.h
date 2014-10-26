@@ -2,6 +2,7 @@
 #define MYTHMISCUTIL_H_
 
 #include <stdint.h>
+#include <time.h>
 
 #include <algorithm>
 using namespace std;
@@ -79,6 +80,9 @@ MBASE_PUBLIC bool myth_ioprio(int val);
 MBASE_PUBLIC bool MythRemoveDirectory(QDir &aDir);
 
 MBASE_PUBLIC void setHttpProxy(void);
+
+MBASE_PUBLIC int naturalCompare(const QString &_a, const QString &_b,
+                                Qt::CaseSensitivity caseSensitivity = Qt::CaseSensitive);
 
 // CPU Tick timing function
 #ifdef MMX

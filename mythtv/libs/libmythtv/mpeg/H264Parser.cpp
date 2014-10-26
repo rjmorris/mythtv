@@ -107,6 +107,7 @@ void H264Parser::Reset(void)
     state_changed = false;
     seen_sps = false;
     is_keyframe = false;
+    SPS_offset = 0;
 
     sync_accumulator = 0xffffffff;
     AU_pending = false;
@@ -616,9 +617,9 @@ bool H264Parser::decode_Header(GetBitContext *gb)
 {
     is_keyframe = false;
 
-    if (log2_max_frame_num == 0 || pic_order_present_flag == -1)
+    if (log2_max_frame_num == 0)
     {
-        /* SPS or PPS has not been parsed yet */
+        /* SPS has not been parsed yet */
         return false;
     }
 

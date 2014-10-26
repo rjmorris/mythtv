@@ -2368,18 +2368,18 @@ QString ProgramInfo::GetPlaybackURL(
         (gCoreContext->GetNumSetting("MasterBackendOverride", 0)) &&
         (RemoteCheckFile(this, false)))
     {
-        tmpURL = gCoreContext->GenMythURL(gCoreContext->GetSetting("MasterServerIP"),
-                                          gCoreContext->GetSetting("MasterServerPort").toInt(),
+        tmpURL = gCoreContext->GenMythURL(gCoreContext->GetMasterHostName(),
+                                          gCoreContext->GetMasterServerPort(),
                                           basename);
 
         LOG(VB_FILE, LOG_INFO, LOC +
             QString("GetPlaybackURL: Found @ '%1'").arg(tmpURL));
         return tmpURL;
-        }
+    }
 
     // Fallback to streaming from the backend the recording was created on
-    tmpURL = gCoreContext->GenMythURL(gCoreContext->GetBackendServerIP(hostname),
-                                      gCoreContext->GetSettingOnHost("BackendServerPort", hostname).toInt(),
+    tmpURL = gCoreContext->GenMythURL(hostname,
+                                      gCoreContext->GetBackendServerPort(hostname),
                                       basename);
 
     LOG(VB_FILE, LOG_INFO, LOC +
@@ -3551,25 +3551,31 @@ void ProgramInfo::SavePositionMap(
     if (!query.exec())
         MythDB::DBError("position map clear", query);
 
+    if (posMap.isEmpty())
+        return;
+
+    // Use the multi-value insert syntax to reduce database I/O
+    QStringList q("INSERT INTO ");
+    QString qfields;
     if (IsVideo())
     {
-        query.prepare(
-            "INSERT INTO "
-            "filemarkup (filename, mark, type, offset) "
-            "VALUES ( :PATH , :MARK , :TYPE , :OFFSET )");
-        query.bindValue(":PATH", videoPath);
+        q << "filemarkup (filename, type, mark, offset)";
+        qfields = QString("('%1',%2,") .
+            // ideally, this should be escaped
+            arg(videoPath) .
+            arg(type);
     }
     else // if (IsRecording())
     {
-        query.prepare(
-            "INSERT INTO "
-            "recordedseek (chanid, starttime, mark, type, offset) "
-            " VALUES ( :CHANID , :STARTTIME , :MARK , :TYPE , :OFFSET )");
-        query.bindValue(":CHANID",    chanid);
-        query.bindValue(":STARTTIME", recstartts);
+        q << "recordedseek (chanid, starttime, type, mark, offset)";
+        qfields = QString("(%1,'%2',%3,") .
+            arg(chanid) .
+            arg(recstartts.toString(Qt::ISODate)) .
+            arg(type);
     }
-    query.bindValue(":TYPE", type);
+    q << " VALUES ";
 
+    bool add_comma = false;
     frm_pos_map_t::iterator it;
     for (it = posMap.begin(); it != posMap.end(); ++it)
     {
@@ -3583,20 +3589,29 @@ void ProgramInfo::SavePositionMap(
 
         uint64_t offset = *it;
 
-        query.bindValue(":MARK",   (quint64)frame);
-        query.bindValue(":OFFSET", (quint64)offset);
-
-        if (!query.exec())
+        if (add_comma)
         {
-            MythDB::DBError("position map insert", query);
-            break;
+            q << ",";
         }
+        else
+        {
+            add_comma = true;
+        }
+        q << qfields << QString("%1,%2)").arg(frame).arg(offset);
+    }
+    query.prepare(q.join(""));
+    if (!query.exec())
+    {
+        MythDB::DBError("position map insert", query);
     }
 }
 
 void ProgramInfo::SavePositionMapDelta(
     frm_pos_map_t &posMap, MarkTypes type) const
 {
+    if (posMap.isEmpty())
+        return;
+
     if (positionMapDBReplacement)
     {
         QMutexLocker locker(positionMapDBReplacement->lock);
@@ -3609,45 +3624,54 @@ void ProgramInfo::SavePositionMapDelta(
         return;
     }
 
-    MSqlQuery query(MSqlQuery::InitCon());
-
+    // Use the multi-value insert syntax to reduce database I/O
+    QStringList q("INSERT INTO ");
+    QString qfields;
     if (IsVideo())
     {
-        query.prepare(
-            "INSERT INTO "
-            "filemarkup (filename, mark, type, offset) "
-            "VALUES ( :PATH , :MARK , :TYPE , :OFFSET )");
-        query.bindValue(":PATH", StorageGroup::GetRelativePathname(pathname));
+        q << "filemarkup (filename, type, mark, offset)";
+        qfields = QString("('%1',%2,") .
+            // ideally, this should be escaped
+            arg(StorageGroup::GetRelativePathname(pathname)) .
+            arg(type);
     }
     else if (IsRecording())
     {
-        query.prepare(
-            "INSERT INTO "
-            "recordedseek (chanid, starttime, mark, type, offset) "
-            " VALUES ( :CHANID , :STARTTIME , :MARK , :TYPE , :OFFSET )");
-        query.bindValue(":CHANID",    chanid);
-        query.bindValue(":STARTTIME", recstartts);
+        q << "recordedseek (chanid, starttime, type, mark, offset)";
+        qfields = QString("(%1,'%2',%3,") .
+            arg(chanid) .
+            arg(recstartts.toString(Qt::ISODate)) .
+            arg(type);
     }
     else
     {
         return;
     }
-    query.bindValue(":TYPE", type);
+    q << " VALUES ";
 
+    bool add_comma = false;
     frm_pos_map_t::iterator it;
     for (it = posMap.begin(); it != posMap.end(); ++it)
     {
         uint64_t frame  = it.key();
         uint64_t offset = *it;
 
-        query.bindValue(":MARK",   (quint64)frame);
-        query.bindValue(":OFFSET", (quint64)offset);
-
-        if (!query.exec())
+        if (add_comma)
         {
-            MythDB::DBError("delta position map insert", query);
-            break;
+            q << ",";
         }
+        else
+        {
+            add_comma = true;
+        }
+        q << qfields << QString("%1,%2)").arg(frame).arg(offset);
+    }
+
+    MSqlQuery query(MSqlQuery::InitCon());
+    query.prepare(q.join(""));
+    if (!query.exec())
+    {
+        MythDB::DBError("delta position map insert", query);
     }
 }
 
@@ -3879,11 +3903,17 @@ MarkTypes ProgramInfo::QueryAverageAspectRatio(void ) const
                 "      recordedmarkup.type      >= :ASPECTSTART AND "
                 "      recordedmarkup.type      <= :ASPECTEND "
                 "GROUP BY recordedmarkup.type "
-                "ORDER BY SUM( ( SELECT IFNULL(rm.mark, recordedmarkup.mark)"
+                "ORDER BY SUM( ( SELECT IFNULL(rm.mark, ( "
+                "                  SELECT MAX(rmmax.mark) "
+                "                  FROM recordedmarkup AS rmmax "
+                "                  WHERE rmmax.chanid    = recordedmarkup.chanid "
+                "                    AND rmmax.starttime = recordedmarkup.starttime "
+                "                ) ) "
                 "                FROM recordedmarkup AS rm "
                 "                WHERE rm.chanid    = recordedmarkup.chanid    AND "
                 "                      rm.starttime = recordedmarkup.starttime AND "
-                "                      rm.type      = recordedmarkup.type      AND "
+                "                      rm.type      >= :ASPECTSTART2           AND "
+                "                      rm.type      <= :ASPECTEND2             AND "
                 "                      rm.mark      > recordedmarkup.mark "
                 "                ORDER BY rm.mark ASC LIMIT 1 "
                 "              ) - recordedmarkup.mark "
@@ -3893,6 +3923,8 @@ MarkTypes ProgramInfo::QueryAverageAspectRatio(void ) const
     query.bindValue(":STARTTIME", recstartts);
     query.bindValue(":ASPECTSTART", MARK_ASPECT_4_3); // 11
     query.bindValue(":ASPECTEND", MARK_ASPECT_CUSTOM); // 14
+    query.bindValue(":ASPECTSTART2", MARK_ASPECT_4_3); // 11
+    query.bindValue(":ASPECTEND2", MARK_ASPECT_CUSTOM); // 14
 
     if (!query.exec())
     {

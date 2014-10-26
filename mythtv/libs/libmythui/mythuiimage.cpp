@@ -471,24 +471,27 @@ class ImageLoadThread : public QRunnable
                                                      m_cacheMode, m_parent,
                                                      aborted);
 
-             ImageLoadEvent *le = new ImageLoadEvent(m_parent, frames,
-                                                     m_basefile,
-                                                     m_imageProperties.filename,
-                                                     aborted);
-             QCoreApplication::postEvent(const_cast<MythUIImage*>(m_parent), le);
-        }
-        else
-        {
-            MythImage *image = ImageLoader::LoadImage(m_painter,
-                                                      m_imageProperties,
-                                                      m_cacheMode, m_parent,
-                                                      aborted);
+             if (frames && frames->count() > 1)
+             {
+                ImageLoadEvent *le = new ImageLoadEvent(m_parent, frames,
+                                                        m_basefile,
+                                                        m_imageProperties.filename,
+                                                        aborted);
+                QCoreApplication::postEvent(const_cast<MythUIImage*>(m_parent), le);
 
-            ImageLoadEvent *le = new ImageLoadEvent(m_parent, image, m_basefile,
-                                                    m_imageProperties.filename,
-                                                    m_number, aborted);
-            QCoreApplication::postEvent(const_cast<MythUIImage*>(m_parent), le);
+                return;
+             }
         }
+
+        MythImage *image = ImageLoader::LoadImage(m_painter,
+                                                    m_imageProperties,
+                                                    m_cacheMode, m_parent,
+                                                    aborted);
+
+        ImageLoadEvent *le = new ImageLoadEvent(m_parent, image, m_basefile,
+                                                m_imageProperties.filename,
+                                                m_number, aborted);
+        QCoreApplication::postEvent(const_cast<MythUIImage*>(m_parent), le);
     }
 
 private:
@@ -1011,7 +1014,7 @@ bool MythUIImage::Load(bool allowLoadInBackground, bool forceStat)
             SetMinArea(MythRect());
             LOG(VB_GUI | VB_FILE, LOG_DEBUG, LOC +
                 QString("Load(), spawning thread to load '%1'").arg(filename));
-                
+
             m_runningThreads++;
             ImageLoadThread *bImgThread;
             bImgThread = new ImageLoadThread(this, GetPainter(),
