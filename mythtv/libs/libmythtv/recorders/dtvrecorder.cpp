@@ -1135,7 +1135,7 @@ void DTVRecorder::FindPSKeyFrames(const uint8_t *buffer, uint len)
         if (hasKeyFrame)
         {
             _last_keyframe_seen = _frames_seen_count;
-            HandleKeyframe(_payload_buffer.size() - (bufptr - bufstart));
+            HandleKeyframe((int64_t)_payload_buffer.size() - (bufptr - bufstart));
         }
 
         if ((aspectRatio > 0) && (aspectRatio != m_videoAspect))
@@ -1299,6 +1299,12 @@ void DTVRecorder::HandleSingleProgramPMT(ProgramMapTable *pmt, bool insert)
     for (uint i = 0; i < pmt->StreamCount(); ++i)
         _stream_id[pmt->StreamPID(i)] = pmt->StreamType(i);
 
+    // If the PCRPID is valid and the PCR is not contained
+    // in another stream, make sure the PCR stream is not
+    // discarded (use PrivSec type as dummy 'valid' value)
+    if(pmt->PCRPID() != 0x1fff && pmt->FindPID(pmt->PCRPID()) == -1)
+        _stream_id[pmt->PCRPID()] = StreamID::PrivSec;
+
     if (!ringBuffer)
         return;
 
@@ -1335,6 +1341,11 @@ bool DTVRecorder::ProcessTSPacket(const TSPacket &tspacket)
     {
         FindOtherKeyframes(&tspacket);
         _buffer_packets = false;
+    }
+    else if (_stream_id[pid] == 0)
+    {
+        // Ignore this packet if the PID should be stripped
+        return true;
     }
     else
     {
