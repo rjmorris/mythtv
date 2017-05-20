@@ -21,6 +21,7 @@ def dbconnect(dbconn, log):
                            passwd= dbconn.password,
                            db=     dbconn.database,
                            port=   dbconn.port,
+                           init_command="set session sql_mode=''",
                            use_unicode=True,
                            charset='utf8')
     db.autocommit(True)
