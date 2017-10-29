@@ -1776,7 +1776,8 @@ bool PlaybackBox::UpdateUILists(void)
                 continue;
             }
 
-            if (!p->IsWatched() &&
+            if ((m_viewMask & VIEW_PARTWATCH) &&
+                !p->IsWatched() &&
                 p->IsBookmarkSet() &&
                 !isLiveTVProg &&
                 pRecgroup != "Deleted")
@@ -5233,6 +5234,15 @@ bool ChangeView::Create()
                     m_parentScreen, SLOT(toggleWatchListView(bool)));
         }
     //
+
+    checkBox = dynamic_cast<MythUICheckBox*>(GetChild("partwatch"));
+    if (checkBox)
+    {
+        if (m_viewMask & PlaybackBox::VIEW_PARTWATCH)
+            checkBox->SetCheckState(MythUIStateType::Full);
+        connect(checkBox, SIGNAL(toggled(bool)),
+                m_parentScreen, SLOT(togglePartWatchView(bool)));
+    }
 
     checkBox = dynamic_cast<MythUICheckBox*>(GetChild("searches"));
     if (checkBox)

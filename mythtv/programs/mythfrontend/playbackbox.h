@@ -90,6 +90,7 @@ class PlaybackBox : public ScheduleCommon
         VIEW_WATCHLIST  =  0x0008,
         VIEW_SEARCHES   =  0x0010,
         VIEW_LIVETVGRP  =  0x0020,
+        VIEW_PARTWATCH  =  0x0040,
         // insert new entries above here
         VIEW_WATCHED    =  0x8000
     } ViewMask;
@@ -200,6 +201,7 @@ class PlaybackBox : public ScheduleCommon
     void toggleCategoryView(bool setOn)  { toggleView(VIEW_CATEGORIES, setOn); }
     void toggleRecGroupView(bool setOn)  { toggleView(VIEW_RECGROUPS, setOn); }
     void toggleWatchListView(bool setOn) { toggleView(VIEW_WATCHLIST, setOn); }
+    void togglePartWatchView(bool setOn) { toggleView(VIEW_PARTWATCH, setOn); }
     void toggleSearchView(bool setOn)    { toggleView(VIEW_SEARCHES, setOn); }
     void toggleLiveTVView(bool setOn)    { toggleView(VIEW_LIVETVGRP, setOn); }
     void toggleWatchedView(bool setOn)   { toggleView(VIEW_WATCHED, setOn); }
