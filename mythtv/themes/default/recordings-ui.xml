@@ -280,7 +280,7 @@
     </window>
 
     <window name="changeview">
-        <area>-1,-1,500,500</area>
+        <area>-1,-1,500,550</area>
         <imagetype name="backimg">
             <filename>mythdialogbox-background.png</filename>
         </imagetype>
@@ -319,44 +319,53 @@
             <value>Show Recording Groups</value>
         </textarea>
 
-        <checkbox name="watchlist" from="basecheckbox">
+        <checkbox name="partwatch" from="basecheckbox">
             <position>90,240</position>
         </checkbox>
 
-        <textarea name="watchlabel" from="titlelabel">
+        <textarea name="partlabel" from="titlelabel">
             <position>140,240</position>
+            <value>Show Partially Watched</value>
+        </textarea>
+
+        <checkbox name="watchlist" from="basecheckbox">
+            <position>90,290</position>
+        </checkbox>
+
+        <textarea name="watchlabel" from="titlelabel">
+            <position>140,290</position>
             <value>Show Watch List</value>
         </textarea>
 
         <checkbox name="searches" from="basecheckbox">
-            <position>90,290</position>
+            <position>90,340</position>
         </checkbox>
 
         <textarea name="searchlabel" from="titlelabel">
-            <position>140,290</position>
+            <position>140,340</position>
             <value>Show Searches</value>
         </textarea>
 
         <checkbox name="livetv" from="basecheckbox">
-            <position>90,340</position>
+            <position>90,390</position>
         </checkbox>
 
         <textarea name="livelabel" from="titlelabel">
-            <position>140,340</position>
+            <position>140,390</position>
             <value>Show LiveTV</value>
         </textarea>
 
         <checkbox name="watched" from="basecheckbox">
-            <position>90,390</position>
+            <position>90,440</position>
         </checkbox>
 
         <textarea name="watchedlabel" from="titlelabel">
-            <position>140,390</position>
+            <position>140,440</position>
             <value>Show Watched Programs</value>
         </textarea>
 
         <button name="save" from="basebutton">
-            <position>315,435</position>
+            <position>315,485</position>
             <value>Save</value>
         </button>
     </window>
