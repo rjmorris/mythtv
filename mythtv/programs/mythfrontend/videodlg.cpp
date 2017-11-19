@@ -2405,7 +2405,14 @@ void VideoDialog::UpdateText(MythUIButtonListItem *item)
 
     if (m_d->m_currentNode)
     {
-        CheckedSet(m_crumbText, m_d->m_currentNode->getRouteByString().join(" > "));
+        if (m_d->m_currentNode == m_d->m_rootNode)
+        {
+            CheckedSet(m_crumbText, QObject::tr("Video Home"));
+        }
+        else
+        {
+            CheckedSet(m_crumbText, m_d->m_currentNode->getParent()->getRouteByString().join(" > "));
+        }
         CheckedSet(this, "foldername", m_d->m_currentNode->GetText());
     }
 
