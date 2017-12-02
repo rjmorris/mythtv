@@ -383,13 +383,13 @@ static int checkOKShutdown(bool bWantRecStatus)
     if (res > 0)
     {
         LOG(VB_STDIO|VB_FLUSH, LOG_ERR,
-            QObject::tr("Not OK to shutdown", "mythshutdown") + "\n");
+            QObject::tr("Not OK to shut down", "mythshutdown") + "\n");
         res = 1;
     }
     else
     {
         LOG(VB_STDIO|VB_FLUSH, LOG_ERR,
-            QObject::tr("OK to shutdown", "mythshutdown") + "\n");
+            QObject::tr("OK to shut down", "mythshutdown") + "\n");
         res = 0;
     }
 
@@ -548,7 +548,7 @@ static int shutdown()
                         "mythshutdown") + "\n");
     }
 
-    // get next scheduled wake up for a recording if any
+    // get next scheduled wakeup for a recording if any
     QDateTime dtNextRecordingStart = QDateTime();
     QString s = getGlobalSetting("MythShutdownNextScheduled", "");
     if (!s.isEmpty())
@@ -594,7 +594,7 @@ static int shutdown()
     {
         dtWakeupTime = QDateTime();
         LOG(VB_STDIO|VB_FLUSH, LOG_ERR,
-            QObject::tr("Error: no wake up time set and no scheduled program",
+            QObject::tr("Error: no wakeup time set and no scheduled program",
                         "mythshutdown") + "\n");
     }
 
