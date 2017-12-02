@@ -62,10 +62,10 @@ static HostCheckBox *AutoStartFrontend()
 static HostCheckBox *ShutdownWithBE()
 {
     HostCheckBox *gc = new HostCheckBox("ShutdownWithMasterBE");
-    gc->setLabel(MythWelcomeSettings::tr("Shutdown with Master Backend"));
+    gc->setLabel(MythWelcomeSettings::tr("Shut down with master backend"));
     gc->setValue(false);
     gc->setHelpText(MythWelcomeSettings::tr("Mythwelcome will automatically "
-                        "shutdown this computer when the master backend shuts "
+                        "shut this computer down when the master backend shuts "
                         "down. Should only be set on frontend only machines"));
     return gc;
 };
@@ -93,12 +93,12 @@ MythWelcomeSettings::MythWelcomeSettings()
 
     vcg->setLabel(tr("MythWelcome Settings"));
 
-    hcg1->setLabel(tr("Daily Wakeup/ShutDown Period %1").arg("1"));
+    hcg1->setLabel(tr("Daily wakeup/shutdown period %1").arg("1"));
     hcg1->addChild(DailyWakeupStart1());
     hcg1->addChild(DailyWakeupEnd1());
     vcg->addChild(hcg1);
 
-    hcg2->setLabel(tr("Daily Wakeup/ShutDown Period %1").arg("2"));
+    hcg2->setLabel(tr("Daily wakeup/shutdown period %1").arg("2"));
     hcg2->addChild(DailyWakeupStart2());
     hcg2->addChild(DailyWakeupEnd2());
     vcg->addChild(hcg2);
@@ -123,7 +123,7 @@ MythWelcomeSettings::MythWelcomeSettings()
 static HostLineEdit *MythShutdownNvramCmd()
 {
     HostLineEdit *gc = new HostLineEdit("MythShutdownNvramCmd");
-    gc->setLabel(MythShutdownSettings::tr("Command to Set Wakeup Time"));
+    gc->setLabel(MythShutdownSettings::tr("Command to set wakeup time"));
     gc->setValue("/usr/bin/nvram-wakeup --settime $time");
     gc->setHelpText(MythShutdownSettings::tr("Command to set the wakeup time "
                         "in the BIOS. See the README file for more examples."));
@@ -147,7 +147,7 @@ static HostComboBox *WakeupTimeFormat()
 static HostLineEdit *MythShutdownNvramRestartCmd()
 {
     HostLineEdit *gc = new HostLineEdit("MythShutdownNvramRestartCmd");
-    gc->setLabel(MythShutdownSettings::tr("nvram-wakeup Restart Command"));
+    gc->setLabel(MythShutdownSettings::tr("nvram-wakeup restart command"));
     gc->setValue("/sbin/grub-set-default 1");
     gc->setHelpText(MythShutdownSettings::tr("Command to run if your bios "
                         "requires you to reboot to allow nvram-wakeup settings "
@@ -169,9 +169,9 @@ static HostLineEdit *MythShutdownReboot()
 static HostLineEdit *MythShutdownPowerOff()
 {
     HostLineEdit *gc = new HostLineEdit("MythShutdownPowerOff");
-    gc->setLabel(MythShutdownSettings::tr("Command to shutdown"));
+    gc->setLabel(MythShutdownSettings::tr("Command to shut down"));
     gc->setValue("/sbin/poweroff");
-    gc->setHelpText(MythShutdownSettings::tr("Command to shutdown computer."));
+    gc->setHelpText(MythShutdownSettings::tr("Command to shut computer down."));
     return gc;
 };
 
@@ -179,7 +179,7 @@ static HostLineEdit *MythShutdownStartFECmd()
 {
     HostLineEdit *gc = new HostLineEdit("MythWelcomeStartFECmd");
     gc->setLabel(MythShutdownSettings::tr("Command to run to start the "
-                                          "Frontend"));
+                                          "frontend"));
     gc->setValue(GetAppBinDir() + "mythfrontend");
     gc->setHelpText(MythShutdownSettings::tr("Command to start mythfrontend."));
     return gc;

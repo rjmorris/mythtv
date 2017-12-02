@@ -217,20 +217,20 @@ void ExitPrompter::handleExit()
 
     if (!dlg->Create())
     {
-        LOG(VB_GENERAL, LOG_ERR, "Can't create Exit Prompt dialog?");
+        LOG(VB_GENERAL, LOG_ERR, "Can't create Exit Prompt dialog");
         delete dlg;
         quit();
     }
 
     dlg->AddButton(QCoreApplication::translate("(Common)", "No"));
     if (allowExit)
-        dlg->AddButton(tr("Yes, Exit now"),          SLOT(quit()));
+        dlg->AddButton(tr("Yes, exit now"),          SLOT(quit()));
     if (allowReboot)
-        dlg->AddButton(tr("Yes, Exit and Reboot"),   SLOT(reboot()));
+        dlg->AddButton(tr("Yes, exit and reboot"),   SLOT(reboot()));
     if (allowShutdown)
-        dlg->AddButton(tr("Yes, Exit and Shutdown"), SLOT(halt()));
+        dlg->AddButton(tr("Yes, exit and shut down"), SLOT(halt()));
     if (allowStandby)
-        dlg->AddButton(tr("Yes, Enter Standby Mode"), SLOT(standby()));
+        dlg->AddButton(tr("Yes, enter standby mode"), SLOT(standby()));
 
     // This is a hack so that the button clicks target the correct slot:
     dlg->SetReturnEvent(this, QString());

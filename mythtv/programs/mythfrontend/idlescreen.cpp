@@ -135,7 +135,7 @@ void IdleScreen::UpdateStatus(void)
         {
             if (m_secondsToShutdown >= 0)
             {
-                QString status = tr("Backend will shutdown in %n "
+                QString status = tr("Backend will shut down in %n "
                                     "second(s).", "", m_secondsToShutdown);
 
                 statusText->SetText(status);

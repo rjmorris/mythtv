@@ -3295,18 +3295,18 @@ bool Scheduler::CheckShutdownServer(int prerollseconds, QDateTime &idleSince,
         {
             case 0:
                 LOG(logmask, LOG_INFO,
-                    "CheckShutdownServer returned - OK to shutdown");
+                    "CheckShutdownServer returned - OK to shut down");
                 retval = true;
                 break;
             case 1:
                 LOG(logmask, LOG_NOTICE,
-                    "CheckShutdownServer returned - Not OK to shutdown");
+                    "CheckShutdownServer returned - Not OK to shut down");
                 // just reset idle'ing on retval == 1
                 idleSince = QDateTime();
                 break;
             case 2:
                 LOG(logmask, LOG_NOTICE,
-                    "CheckShutdownServer returned - Not OK to shutdown, "
+                    "CheckShutdownServer returned - Not OK to shut down, "
                     "need reconnect");
                 // reset shutdown status on retval = 2
                 // (needs a clientconnection again,
@@ -3426,8 +3426,8 @@ void Scheduler::ShutdownServer(int prerollseconds, QDateTime &idleSince)
         m_mainServer->ShutSlaveBackendsDown(halt_cmd);
 
         LOG(VB_GENERAL, LOG_NOTICE,
-            QString("Running the command to shutdown "
-                    "this computer :-\n\t\t\t\t") + halt_cmd);
+            QString("Running the command to shut this "
+                    "computer down:-\n\t\t\t\t") + halt_cmd);
 
         // and now shutdown myself
         schedLock.unlock();
@@ -3580,7 +3580,7 @@ void Scheduler::PutInactiveSlavesToSleep(void)
                 else
                 {
                     LOG(VB_GENERAL, LOG_ERR, LOC +
-                        QString("Unable to shutdown %1 slave backend, setting "
+                        QString("Unable to shut down %1 slave backend, setting "
                                 "sleep status to undefined.").arg(thisHost));
                     QMap<int, EncoderLink *>::Iterator slviter =
                         m_tvList->begin();
@@ -3601,7 +3601,7 @@ bool Scheduler::WakeUpSlave(QString slaveHostname, bool setWakingStatus)
     if (slaveHostname == gCoreContext->GetHostName())
     {
         LOG(VB_GENERAL, LOG_NOTICE,
-            QString("Tried to Wake Up %1, but this is the "
+            QString("Tried to wake up %1, but this is the "
                     "master backend and it is not asleep.")
                 .arg(slaveHostname));
         return false;
