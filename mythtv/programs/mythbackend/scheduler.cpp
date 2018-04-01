@@ -636,7 +636,7 @@ void Scheduler::PrintRec(const RecordingInfo *p, const QString &prefix)
         .arg(p->GetChannelSchedulingID().leftJustified(7, ' ', true))
         .arg(p->GetRecordingStartTime().toLocalTime().toString("dd hh:mm"))
         .arg(p->GetRecordingEndTime().toLocalTime().toString("hh:mm"))
-        .arg(QString::number(p->sgroupid).rightJustified(2, ' '))
+        .arg(p->GetShortInputName().rightJustified(2, ' '))
         .arg(QString::number(p->GetInputID()).rightJustified(2, ' '));
     outstr += QString("%1 %2 %3")
         .arg(toQChar(p->GetRecordingRuleType()))
@@ -1640,6 +1640,7 @@ void Scheduler::PruneRedundants(void)
         {
             p->SetInputID(0);
             p->SetSourceID(0);
+            p->ClearInputName();
             p->sgroupid = 0;
         }
 
@@ -4456,7 +4457,7 @@ void Scheduler::AddNewRecords(void)
         "    capturecard.hostname, recordmatch.oldrecstatus, NULL, "//43-45
         "    oldrecstatus.future, capturecard.schedorder, " //46-47
         "    p.syndicatedepisodenumber, p.partnumber, p.parttotal, " //48-50
-        "    c.mplexid, ") +                                         //51
+        "    c.mplexid, capturecard.displayname, ") +      //51-52
         pwrpri + QString(
         "FROM recordmatch "
         "INNER JOIN RECTABLE ON (recordmatch.recordid = RECTABLE.recordid) "
@@ -4517,9 +4518,13 @@ void Scheduler::AddNewRecords(void)
             && callsign == lastp->GetChannelSchedulingID())
             continue;
 
-        uint mplexid = result.value(51).toUInt();
+       uint mplexid = result.value(51).toUInt();
         if (mplexid == 32767)
             mplexid = 0;
+
+        QString inputname = result.value(52).toString();
+        if (inputname.isEmpty())
+            inputname = QString("Input %1").arg(result.value(24).toUInt());
 
         RecordingInfo *p = new RecordingInfo(
             title,
@@ -4586,7 +4591,8 @@ void Scheduler::AddNewRecords(void)
             result.value(46).toInt(),//future
             result.value(47).toInt(),//schedorder
             mplexid,                 //mplexid
-            result.value(24).toUInt()); //sgroupid
+            result.value(24).toUInt(), //sgroupid
+            inputname);              //inputname
 
         if (!p->future && !p->IsReactivated() &&
             p->oldrecstatus != RecStatus::Aborted &&
@@ -4595,7 +4601,7 @@ void Scheduler::AddNewRecords(void)
             p->SetRecordingStatus(p->oldrecstatus);
         }
 
-        p->SetRecordingPriority2(result.value(52).toInt());
+        p->SetRecordingPriority2(result.value(53).toInt());
 
         // Check to see if the program is currently recording and if
         // the end time was changed.  Ideally, checking for a new end

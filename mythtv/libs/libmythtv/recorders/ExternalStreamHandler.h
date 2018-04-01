@@ -19,6 +19,8 @@ class ExternalChannel;
 
 class ExternIO
 {
+    enum constants { kMaxErrorCnt = 5 };
+
   public:
     ExternIO(const QString & app, const QStringList & args);
     ~ExternIO(void);
@@ -28,13 +30,13 @@ class ExternIO
     QString GetStatus(int timeout = 2500);
     int Write(const QByteArray & buffer);
     bool Run(void);
-    void Term(bool force = false);
     bool Error(void) const { return !m_error.isEmpty(); }
     QString ErrorString(void) const { return m_error; }
     void ClearError(void) { m_error.clear(); }
 
-  private:
     bool KillIfRunning(const QString & cmd);
+
+  private:
     void Fork(void);
 
     QFileInfo   m_app;
@@ -45,8 +47,12 @@ class ExternIO
     pid_t   m_pid;
     QString m_error;
 
-    int     m_bufsize;
-    char   *m_buffer;
+    int         m_bufsize;
+    char       *m_buffer;
+
+    QString     m_status_buf;
+    QTextStream m_status;
+    int         m_errcnt;
 };
 
 // Note : This class always uses a TS reader.
@@ -74,15 +80,16 @@ class ExternalStreamHandler : public StreamHandler
 
     bool RestartStream(void);
 
-    bool StartStreaming(bool flush_buffer);
+    void LockReplay(void) { m_replay_lock.lock(); }
+    void UnlockReplay(bool enable_replay = false)
+        { m_replay = enable_replay; m_replay_lock.unlock(); }
+    void ReplayStream(void);
+    bool StartStreaming(void);
     bool StopStreaming(void);
 
     bool CheckForError(void);
 
     void PurgeBuffer(void);
-
-    QString ErrorString(void) const { return m_error; }
-    void ClearError(void) { m_error.clear(); _error = false; }
 
     bool ProcessCommand(const QString & cmd, uint timeout,
                         QString & result);
@@ -96,7 +103,6 @@ class ExternalStreamHandler : public StreamHandler
     ExternIO      *m_IO;
     QStringList    m_args;
     QString        m_app;
-    QString        m_error;
     bool           m_tsopen;
     int            m_io_errcnt;
     bool           m_poll_mode;
@@ -115,6 +121,7 @@ class ExternalStreamHandler : public StreamHandler
 
     QAtomicInt    m_streaming_cnt;
     QMutex        m_stream_lock;
+    QMutex        m_replay_lock;
 };
 
 #endif // _ExternalSTREAMHANDLER_H_

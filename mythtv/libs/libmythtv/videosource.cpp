@@ -957,15 +957,18 @@ class VBIDevice : public CaptureCardComboBoxSetting
     }
 };
 
-class ArgumentString : public LineEditSetting, public CaptureCardDBStorage
+class CommandPath : public MythUITextEditSetting
 {
   public:
-    explicit ArgumentString(const CaptureCard &parent) :
-        LineEditSetting(this, true),
-        CaptureCardDBStorage(this, parent, "audiodevice") // change to arguments
+    explicit CommandPath(const CaptureCard &parent) :
+        MythUITextEditSetting(new CaptureCardDBStorage(this, parent,
+                                                       "videodevice"))
     {
-        setLabel(QObject::tr("Arguments"));
-    }
+        setLabel(QObject::tr(""));
+        setValue("");
+        setHelpText(QObject::tr("Specify the command to run, with any "
+                                "needed arguments."));
+    };
 };
 
 class FileDevice : public MythUIFileBrowserSetting
@@ -1373,7 +1376,7 @@ HDHomeRunIP::HDHomeRunIP()
 
 void HDHomeRunIP::setEnabled(bool e)
 {
-    GroupSetting::setEnabled(e);
+    MythUITextEditSetting::setEnabled(e);
     if (e)
     {
         if (!_oldValue.isEmpty())
@@ -1409,7 +1412,7 @@ HDHomeRunTunerIndex::HDHomeRunTunerIndex()
 
 void HDHomeRunTunerIndex::setEnabled(bool e)
 {
-    GroupSetting::setEnabled(e);
+    MythUITextEditSetting::setEnabled(e);
     if (e) {
         if (!_oldValue.isEmpty())
             setValue(_oldValue);
@@ -1440,6 +1443,7 @@ HDHomeRunDeviceID::HDHomeRunDeviceID(const CaptureCard &parent) :
 {
     setLabel(tr("Device ID"));
     setHelpText(tr("Device ID of HDHomeRun device"));
+    setEnabled(false);
 }
 
 void HDHomeRunDeviceID::SetIP(const QString &ip)
@@ -1487,12 +1491,14 @@ HDHomeRunDeviceIDList::HDHomeRunDeviceIDList(
     StandardSetting     *desc,
     HDHomeRunIP         *cardip,
     HDHomeRunTunerIndex *cardtuner,
-    HDHomeRunDeviceList *devicelist) :
+    HDHomeRunDeviceList *devicelist,
+    const CaptureCard &parent) :
     _deviceid(deviceid),
     _desc(desc),
     _cardip(cardip),
     _cardtuner(cardtuner),
-    _devicelist(devicelist)
+    _devicelist(devicelist),
+    m_parent(parent)
 {
     setLabel(QObject::tr("Available devices"));
     setHelpText(
@@ -1580,7 +1586,9 @@ void HDHomeRunDeviceIDList::Load(void)
 {
     clearSelections();
 
-    fillSelections(_deviceid->getValue());
+    int cardid = m_parent.getCardID();
+    QString device = CardUtil::GetVideoDevice(cardid);
+    fillSelections(device);
 }
 
 void HDHomeRunDeviceIDList::UpdateDevices(const QString &v)
@@ -1629,7 +1637,7 @@ VBoxIP::VBoxIP()
 
 void VBoxIP::setEnabled(bool e)
 {
-    GroupSetting::setEnabled(e);
+    MythUITextEditSetting::setEnabled(e);
     if (e)
     {
         if (!_oldValue.isEmpty())
@@ -1661,7 +1669,7 @@ VBoxTunerIndex::VBoxTunerIndex()
 
 void VBoxTunerIndex::setEnabled(bool e)
 {
-    GroupSetting::setEnabled(e);
+    MythUITextEditSetting::setEnabled(e);
     if (e) {
         if (!_oldValue.isEmpty())
             setValue(_oldValue);
@@ -1687,6 +1695,7 @@ VBoxDeviceID::VBoxDeviceID(const CaptureCard &parent) :
 {
     setLabel(tr("Device ID"));
     setHelpText(tr("Device ID of VBox device"));
+    setEnabled(false);
 }
 
 void VBoxDeviceID::SetIP(const QString &ip)
@@ -1722,12 +1731,14 @@ VBoxDeviceIDList::VBoxDeviceIDList(
     StandardSetting     *desc,
     VBoxIP              *cardip,
     VBoxTunerIndex      *cardtuner,
-    VBoxDeviceList      *devicelist) :
+    VBoxDeviceList      *devicelist,
+    const CaptureCard &parent) :
     _deviceid(deviceid),
     _desc(desc),
     _cardip(cardip),
     _cardtuner(cardtuner),
-    _devicelist(devicelist)
+    _devicelist(devicelist),
+    m_parent(parent)
 {
     setLabel(QObject::tr("Available devices"));
     setHelpText(
@@ -1796,7 +1807,9 @@ void VBoxDeviceIDList::Load(void)
 {
     clearSelections();
 
-    fillSelections(_deviceid->getValue());
+    int cardid = m_parent.getCardID();
+    QString device = CardUtil::GetVideoDevice(cardid);
+    fillSelections(device);
 }
 
 void VBoxDeviceIDList::UpdateDevices(const QString &v)
@@ -2065,7 +2078,7 @@ HDHomeRunConfigurationGroup::HDHomeRunConfigurationGroup
     cardip       = new HDHomeRunIP();
     cardtuner    = new HDHomeRunTunerIndex();
     deviceidlist = new HDHomeRunDeviceIDList(
-        deviceid, desc, cardip, cardtuner, &devicelist);
+        deviceid, desc, cardip, cardtuner, &devicelist, parent);
 
     a_cardtype.addTargetedChild("HDHOMERUN", deviceidlist);
     a_cardtype.addTargetedChild("HDHOMERUN", new EmptyAudioDevice(parent));
@@ -2228,7 +2241,7 @@ VBoxConfigurationGroup::VBoxConfigurationGroup
     cardip       = new VBoxIP();
     cardtuner    = new VBoxTunerIndex();
     deviceidlist = new VBoxDeviceIDList(
-        deviceid, desc, cardip, cardtuner, &devicelist);
+        deviceid, desc, cardip, cardtuner, &devicelist, parent);
 
     a_cardtype.addTargetedChild("VBOX", deviceidlist);
     a_cardtype.addTargetedChild("VBOX", new EmptyAudioDevice(parent));
@@ -2543,7 +2556,8 @@ ExternalConfigurationGroup::ExternalConfigurationGroup(CaptureCard &a_parent,
     info(new TransTextEditSetting())
 {
     setVisible(false);
-    FileDevice *device = new FileDevice(parent);
+    CommandPath *device = new CommandPath(parent);
+    device->setLabel(tr("Command path"));
     device->setHelpText(tr("A 'black box' application controlled via "
                            "stdin, status on stderr and TransportStream "
                            "read from stdout"));
@@ -2552,6 +2566,9 @@ ExternalConfigurationGroup::ExternalConfigurationGroup(CaptureCard &a_parent,
     info->setLabel(tr("File info"));
     info->setEnabled(false);
     a_cardtype.addTargetedChild("EXTERNAL", info);
+
+    a_cardtype.addTargetedChild("EXTERNAL",
+                                new ChannelTimeout(parent, 20000, 1750));
 
     connect(device, SIGNAL(valueChanged(const QString&)),
             this,   SLOT(  probeApp(   const QString&)));
@@ -2571,13 +2588,16 @@ void ExternalConfigurationGroup::probeApp(const QString & path)
     {
         ci = tr("'%1' is valid.").arg(fileInfo.absoluteFilePath());
         if (!fileInfo.isReadable() || !fileInfo.isFile())
-            ci = tr("'%1' is not readable.").arg(fileInfo.absoluteFilePath());
+            ci = tr("WARNING: '%1' is not readable.")
+                 .arg(fileInfo.absoluteFilePath());
         if (!fileInfo.isExecutable())
-            ci = tr("'%1' is not executable.").arg(fileInfo.absoluteFilePath());
+            ci = tr("WARNING: '%1' is not executable.")
+                 .arg(fileInfo.absoluteFilePath());
     }
     else
     {
-        ci = tr("'%1' does not exist.").arg(fileInfo.absoluteFilePath());
+        ci = tr("WARNING: '%1' does not exist.")
+             .arg(fileInfo.absoluteFilePath());
     }
 
     info->setValue(ci);
@@ -4180,4 +4200,3 @@ void DVBConfigurationGroup::Save(void)
     DiSEqCDev trees;
     trees.InvalidateTrees();
 }
-

@@ -3,16 +3,17 @@
 
 #include "qglobal.h"
 #include "mythbaseexp.h"
+#include "mythconfig.h"
 #include "version.h"
 
-#if ( QT_VERSION < 0x050200 )
-#error You need Qt version >= 5.2.0 to compile MythTV.
+#if ( QT_VERSION < QT_MIN_VERSION )
+#error "You need a newer version of Qt to compile MythTV. Please re-run 'configure'."
 #endif
 
 /// Update this whenever the plug-in ABI changes.
 /// Including changes in the libmythbase, libmyth, libmythtv, libmythav* and
 /// libmythui class methods in exported headers.
-#define MYTH_BINARY_VERSION "29.20170212-1"
+#define MYTH_BINARY_VERSION "29.20180316-1"
 
 /** \brief Increment this whenever the MythTV network protocol changes.
  *   Note that the token currently cannot contain spaces.
