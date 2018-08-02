@@ -55,7 +55,7 @@ static bool is_dishnet_eit(uint inputid);
 static int init_jobs(const RecordingInfo *rec, RecordingProfile &profile,
                      bool on_host, bool transcode_bfr_comm, bool on_line_comm);
 static void apply_broken_dvb_driver_crc_hack(ChannelBase*, MPEGStreamData*);
-static int eit_start_rand(uint inputid, int eitTransportTimeout);
+static int eit_start_rand(int eitTransportTimeout);
 
 /** \class TVRec
  *  \brief This is the coordinating class of the \ref recorder_subsystem.
@@ -1051,6 +1051,8 @@ void TVRec::HandleStateChange(void)
     {
         scanner->StopActiveScan();
         ClearFlags(kFlagEITScannerRunning, __FILE__, __LINE__);
+        eitScanStartTime = MythDate::current().addSecs(
+            eitCrawlIdleStart + eit_start_rand(eitTransportTimeout));
     }
 
     // Handle different state transitions
@@ -1095,10 +1097,12 @@ void TVRec::HandleStateChange(void)
     if (scanner && (internalState == kState_None))
     {
         eitScanStartTime = eitScanStartTime.addSecs(
-            eitCrawlIdleStart + eit_start_rand(inputid, eitTransportTimeout));
+            eitCrawlIdleStart + eit_start_rand(eitTransportTimeout));
     }
     else
+    {
         eitScanStartTime = eitScanStartTime.addYears(1);
+    }
 }
 #undef TRANSITION
 #undef SET_NEXT
@@ -1274,7 +1278,7 @@ static int num_inputs(void)
     return -1;
 }
 
-static int eit_start_rand(uint inputid, int eitTransportTimeout)
+static int eit_start_rand(int eitTransportTimeout)
 {
     // randomize start time a bit
     int timeout = random() % (eitTransportTimeout / 3);
@@ -1301,10 +1305,12 @@ void TVRec::run(void)
     {
         scanner = new EITScanner(inputid);
         eitScanStartTime = eitScanStartTime.addSecs(
-            eitCrawlIdleStart + eit_start_rand(inputid, eitTransportTimeout));
+            eitCrawlIdleStart + eit_start_rand(eitTransportTimeout));
     }
     else
+    {
         eitScanStartTime = eitScanStartTime.addYears(1);
+    }
 
     while (HasFlags(kFlagRunMainLoop))
     {
@@ -1567,13 +1573,6 @@ void TVRec::HandlePendingRecordings(void)
 {
     QMutexLocker pendlock(&pendingRecLock);
 
-    if (pendingRecordings.empty())
-        return;
-
-    // If we have a pending recording and AskAllowRecording
-    // or DoNotAskAllowRecording is set and the frontend is
-    // ready send an ASK_RECORDING query to frontend.
-
     PendingMap::iterator it, next;
 
     for (it = pendingRecordings.begin(); it != pendingRecordings.end();)
@@ -1591,6 +1590,21 @@ void TVRec::HandlePendingRecordings(void)
         }
         it = next;
     }
+
+    if (pendingRecordings.empty())
+        return;
+
+    // Make sure EIT scan is stopped so it does't interfere
+    if (scanner && HasFlags(kFlagEITScannerRunning))
+    {
+        LOG(VB_CHANNEL, LOG_INFO,
+            LOC + "Stopping active EIT scan for pending recording.");
+        tuningRequests.enqueue(TuningRequest(kFlagNoRec));
+    }
+
+    // If we have a pending recording and AskAllowRecording
+    // or DoNotAskAllowRecording is set and the frontend is
+    // ready send an ASK_RECORDING query to frontend.
 
     bool has_rec = false;
     it = pendingRecordings.begin();
@@ -3567,6 +3581,8 @@ void TVRec::TuningShutdowns(const TuningRequest &request)
     {
         scanner->StopActiveScan();
         ClearFlags(kFlagEITScannerRunning, __FILE__, __LINE__);
+        eitScanStartTime = MythDate::current().addSecs(
+            eitCrawlIdleStart + eit_start_rand(eitTransportTimeout));
     }
 
     if (scanner && !request.IsOnSameMultiplex())
@@ -3937,11 +3953,7 @@ MPEGStreamData *TVRec::TuningSignalCheck(void)
 
         if (scanner && HasFlags(kFlagEITScannerRunning))
         {
-            scanner->StopActiveScan();
-            ClearFlags(kFlagEITScannerRunning, __FILE__, __LINE__);
-            eitScanStartTime = current_time;
-            eitScanStartTime = eitScanStartTime.addSecs(eitCrawlIdleStart +
-                                  eit_start_rand(inputid, eitTransportTimeout));
+            tuningRequests.enqueue(TuningRequest(kFlagNoRec));
         }
     }
     else if (curRecording && !reachedPreFail && current_time > preFailDeadline)
